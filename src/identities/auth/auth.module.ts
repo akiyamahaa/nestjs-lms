@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './strategy';
 import { AuthController } from './auth.controller';
@@ -9,6 +9,8 @@ import { EConfigKeys } from 'src/common/types/config-keys';
 import { JwtConfig } from 'src/common/types/jwt-config.interface';
 import { ConfigAppModule } from 'src/configs/config-app.module';
 import { AuthService } from './auth.service';
+import { HashingProvider } from './providers/hashing.provider';
+import { BcryptProvider } from './providers/bcrypt.provider';
 
 @Module({
   imports: [
@@ -32,10 +34,18 @@ import { AuthService } from './auth.service';
         };
       },
     }),
-    UsersModule,
+    forwardRef(() => UsersModule),
   ],
   controllers: [AuthController],
-  providers: [JwtStrategy, JwtAuthGuard, AuthService],
-  exports: [JwtAuthGuard, JwtModule], // Export JwtGuard và JwtModule
+  providers: [
+    JwtStrategy,
+    JwtAuthGuard,
+    AuthService,
+    {
+      provide: HashingProvider,
+      useClass: BcryptProvider,
+    },
+  ],
+  exports: [JwtAuthGuard, JwtModule, HashingProvider], // Export JwtGuard và JwtModule
 })
 export class AuthModule {}

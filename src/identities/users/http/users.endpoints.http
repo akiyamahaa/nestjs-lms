@@ -1,0 +1,18 @@
+# @name = Users API tests
+
+POST http://localhost:5005/users
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5ODc2NjgwMy1lZWQzLTQwOGUtODkyMC04NzM0M2I4M2QyNjAiLCJlbWFpbCI6InR1YW5uYUBnbWFpbC5jb20iLCJpYXQiOjE3NDEzNTUxMTAsImV4cCI6MTc0MTM1ODcxMCwiYXVkIjoibG9jYWxob3N0OjMwMDEiLCJpc3MiOiJsb2NhbGhvc3Q6MzAwMSJ9.5vmuOyuN4ghf2shE2upV97ytbrktxyXqNRObHoM6Aec
+{
+  "email": "quanganh123@gmail.com",
+  "password": "password",
+  "fullName": "quanganh"
+}
+
+
+GET http://localhost:5005/users/1
+
+
+
+###
+

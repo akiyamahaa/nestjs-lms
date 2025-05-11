@@ -1,11 +1,18 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
+import { UserWithoutPassword } from 'src/identities/auth/interfaces/request-with-user.interface';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { CreateUserDto } from '../dto/create-user.dto';
+import { HashingProvider } from 'src/identities/auth/providers/hashing.provider';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    // @Inject(HashingProvider)
+    private hashingProvider: HashingProvider,
+  ) {}
 
-  public async findOneById(userId: number) {
+  public async findOneById(userId: number): Promise<UserWithoutPassword> {
     const user = await this.prisma.user.findUnique({
       where: {
         id: userId,
@@ -14,8 +21,57 @@ export class UsersService {
     if (!user) {
       throw new ForbiddenException('User not found');
     }
+    const baseUrl = process.env.BASE_URL;
+    user.avatar = `${baseUrl}/${user.avatar}`;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...userWithoutPassword } = user;
+
+    return userWithoutPassword;
+  }
+
+  public async findOneByEmail(email: string): Promise<UserWithoutPassword> {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        email,
+      },
+    });
+    if (!user) {
+      throw new ForbiddenException('User not found');
+    }
+    const baseUrl = process.env.BASE_URL;
+    user.avatar = `${baseUrl}/${user.avatar}`;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...userWithoutPassword } = user;
+
+    return userWithoutPassword;
+  }
+
+  public async createUser(
+    createUserDto: CreateUserDto,
+  ): Promise<UserWithoutPassword> {
+    const existingUser = await this.prisma.user.findUnique({
+      where: {
+        email: createUserDto.email,
+      },
+    });
+    if (existingUser) {
+      throw new ForbiddenException('User already exists');
+    }
+    const hashedPassword = await this.hashingProvider.hashPassword(
+      createUserDto.password,
+    );
+    const newUser = await this.prisma.user.create({
+      data: {
+        ...createUserDto,
+        password: hashedPassword,
+      },
+    });
+    const baseUrl = process.env.BASE_URL;
+    if (newUser.avatar) {
+      newUser.avatar = `${baseUrl}/${newUser.avatar}`;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...userWithoutPassword } = newUser;
 
     return userWithoutPassword;
   }
