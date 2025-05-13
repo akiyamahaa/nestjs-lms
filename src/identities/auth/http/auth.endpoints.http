@@ -1,0 +1,36 @@
+POST http://localhost:5005/auth/sign-in
+Content-Type: application/json
+
+{
+  "email": "quanganhcf4@gmail.com",
+  "password": "password"
+}
+
+###
+POST http://localhost:5005/auth/sign-up
+Content-Type: application/json
+
+{
+  "email": "quanganhcf4@gmail.com",
+  "password": "password",
+  "fullName":"quang anh"
+}
+
+###
+POST http://localhost:5005/auth/verify-email
+Content-Type: application/json
+
+{
+  "userId": 10,
+  "otpCode": "421042"
+}
+
+###
+POST http://localhost:5005/auth/resend-otp
+Content-Type: application/json
+
+{
+  "email": "quanganhcf2@gmail.com"
+}
+
+

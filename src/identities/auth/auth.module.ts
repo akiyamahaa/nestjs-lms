@@ -7,18 +7,19 @@ import { ConfigService } from '@nestjs/config';
 import { UsersModule } from '../users/users.module';
 import { EConfigKeys } from 'src/common/types/config-keys';
 import { JwtConfig } from 'src/common/types/jwt-config.interface';
-import { ConfigAppModule } from 'src/configs/config-app.module';
-import { AuthService } from './auth.service';
+import { AuthService } from './providers/auth.service';
 import { HashingProvider } from './providers/hashing.provider';
 import { BcryptProvider } from './providers/bcrypt.provider';
+import { VerificationsModule } from '../verifications/verifications.module';
+import { EmailModule } from 'src/common/modules/email/email.module';
 
 @Module({
   imports: [
     JwtModule.registerAsync({
-      imports: [ConfigAppModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         const jwtConfig = configService.get<JwtConfig>(EConfigKeys.JWT);
+        console.log('🚀 ~ jwtConfig:', jwtConfig);
         if (!jwtConfig) {
           throw new Error(
             `JWT configuration is missing for key: ${EConfigKeys.JWT}`,
@@ -35,6 +36,8 @@ import { BcryptProvider } from './providers/bcrypt.provider';
       },
     }),
     forwardRef(() => UsersModule),
+    VerificationsModule,
+    EmailModule,
   ],
   controllers: [AuthController],
   providers: [

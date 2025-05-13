@@ -3,6 +3,7 @@ import { UserWithoutPassword } from 'src/identities/auth/interfaces/request-with
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { HashingProvider } from 'src/identities/auth/providers/hashing.provider';
+import { User } from 'generated/prisma';
 
 @Injectable()
 export class UsersService {
@@ -11,6 +12,21 @@ export class UsersService {
     // @Inject(HashingProvider)
     private hashingProvider: HashingProvider,
   ) {}
+
+  public async findOneByEmailWithPassword(email: string): Promise<User> {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        email,
+      },
+    });
+    if (!user) {
+      throw new ForbiddenException('User not found');
+    }
+    const baseUrl = process.env.BASE_URL;
+    user.avatar = `${baseUrl}/${user.avatar}`;
+
+    return user;
+  }
 
   public async findOneById(userId: number): Promise<UserWithoutPassword> {
     const user = await this.prisma.user.findUnique({
@@ -64,6 +80,7 @@ export class UsersService {
       data: {
         ...createUserDto,
         password: hashedPassword,
+        isVerified: false,
       },
     });
     const baseUrl = process.env.BASE_URL;

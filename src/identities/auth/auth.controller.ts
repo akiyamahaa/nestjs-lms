@@ -1,4 +1,73 @@
-import { Controller } from '@nestjs/common';
-
+import { Body, Controller, Post } from '@nestjs/common';
+import { AuthService } from './providers/auth.service';
+import {
+  ApiBadRequestResponse,
+  ApiBody,
+  ApiConflictResponse,
+  ApiCreatedResponse,
+  ApiOperation,
+} from '@nestjs/swagger';
+import { SignUpDto } from './dto/sign-up.dto';
+import { VerifyEmailDto } from './dto/verify-email.dto';
+import { ResendOtpDto } from './dto/re-send-otp.dto';
+import { SignInDto } from './dto/sign-in.dto';
 @Controller('auth')
-export class AuthController {}
+export class AuthController {
+  constructor(private authService: AuthService) {}
+
+  @Post('sign-in')
+  public signIn(@Body() signInDto: SignInDto) {
+    return this.authService.signIn(signInDto);
+  }
+
+  /**
+   * Registers a new user account.
+   * @route POST /auth/sign-up
+   * @param {SignUpDto} signUpDto - User details for registration.
+   * @returns {Promise<User>} The newly created user.
+   */
+  @Post('sign-up')
+  @ApiOperation({
+    summary: 'User Sign-Up',
+    description: 'Creates a new user account with email verification.',
+  })
+  @ApiBody({
+    type: SignUpDto,
+    description: 'User details for registration',
+  })
+  @ApiCreatedResponse({
+    description: 'User successfully registered',
+    schema: {
+      example: {
+        id: '550e8400-e29b-41d4-a716-446655440000',
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'user@example.com',
+        isVerified: false,
+        role: 'USER',
+        groups: [],
+        createdAt: '2024-03-07T12:00:00.000Z',
+        updatedAt: '2024-03-07T12:00:00.000Z',
+      },
+    },
+  })
+  @ApiConflictResponse({
+    description: 'User with this email already exists',
+  })
+  @ApiBadRequestResponse({
+    description: 'Validation failed for request payload',
+  })
+  public signUp(@Body() signUpDto: SignUpDto) {
+    return this.authService.signUp(signUpDto);
+  }
+
+  @Post('verify-email')
+  public verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
+    return this.authService.verifyEmail(verifyEmailDto);
+  }
+
+  @Post('resend-otp')
+  public resendOtp(@Body() resendOtpDto: ResendOtpDto) {
+    return this.authService.resendOtp(resendOtpDto.email);
+  }
+}

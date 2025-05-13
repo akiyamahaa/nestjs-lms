@@ -10,10 +10,17 @@ const environmentValidation = Joi.object({
 
   // JWT Config
   JWT_SECRET: Joi.string().required(),
+  JWT_REFRESH_TOKEN_SECRET: Joi.string().required(),
   JWT_TOKEN_AUDIENCE: Joi.string().required(),
   JWT_TOKEN_ISSUER: Joi.string().required(),
   JWT_ACCESS_TOKEN_TTL: Joi.number().integer().required(),
   JWT_REFRESH_TOKEN_TTL: Joi.number().integer().required(),
+
+  // Email Config
+  EMAIL_HOST: Joi.string().required(),
+  EMAIL_PORT: Joi.number().integer().required(),
+  EMAIL_USERNAME: Joi.string().required(),
+  EMAIL_PASSWORD: Joi.string().required(),
 });
 
 export default environmentValidation;

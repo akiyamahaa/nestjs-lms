@@ -1,12 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsEmail,
-  IsNotEmpty,
-  IsString,
-  MaxLength,
-  MinLength,
-} from 'class-validator';
-import { Match } from 'src/common/validators/match.validator';
+import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
 
 export class SignUpDto {
   @ApiProperty({
@@ -25,36 +18,8 @@ export class SignUpDto {
   @MinLength(8)
   password: string;
 
-  @ApiProperty({
-    example: 'SecurePassword123',
-    description: 'Password confirmation (must match password)',
-    minLength: 8,
-  })
-  @MinLength(8)
-  @Match('password', { message: 'Passwords do not match' })
-  passwordConfirmation: string;
-
-  @ApiProperty({
-    example: 'John',
-    description: 'User first name',
-    minLength: 3,
-    maxLength: 96,
-  })
   @IsString()
-  @IsNotEmpty()
-  @MinLength(3)
-  @MaxLength(96)
-  firstName: string;
-
-  @ApiProperty({
-    example: 'Doe',
-    description: 'User last name',
-    minLength: 3,
-    maxLength: 96,
-  })
-  @IsString()
-  @IsNotEmpty()
-  @MinLength(3)
-  @MaxLength(96)
-  lastName: string;
+  @IsNotEmpty() // Make fullName required
+  @ApiProperty()
+  fullName: string; // Remove the "?" to make it required
 }
