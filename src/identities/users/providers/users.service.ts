@@ -92,4 +92,33 @@ export class UsersService {
 
     return userWithoutPassword;
   }
+
+  public async createUserWithoutOtp(
+    dto: CreateUserDto,
+  ): Promise<UserWithoutPassword> {
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+    if (existingUser) {
+      throw new ForbiddenException('User already exists');
+    }
+
+    const hashedPassword = await this.hashingProvider.hashPassword(
+      dto.password,
+    );
+
+    const user = await this.prisma.user.create({
+      data: {
+        ...dto,
+        password: hashedPassword,
+        isVerified: true, // ✅ Quan trọng: bỏ qua OTP
+      },
+    });
+
+    const baseUrl = process.env.BASE_URL;
+    user.avatar = user.avatar ? `${baseUrl}/${user.avatar}` : null;
+
+    const { password, ...userWithoutPassword } = user;
+    return userWithoutPassword;
+  }
 }

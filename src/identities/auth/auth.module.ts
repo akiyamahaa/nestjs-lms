@@ -19,7 +19,6 @@ import { EmailModule } from 'src/common/modules/email/email.module';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         const jwtConfig = configService.get<JwtConfig>(EConfigKeys.JWT);
-        console.log('🚀 ~ jwtConfig:', jwtConfig);
         if (!jwtConfig) {
           throw new Error(
             `JWT configuration is missing for key: ${EConfigKeys.JWT}`,

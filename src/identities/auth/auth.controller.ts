@@ -11,6 +11,9 @@ import { SignUpDto } from './dto/sign-up.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ResendOtpDto } from './dto/re-send-otp.dto';
 import { SignInDto } from './dto/sign-in.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { refreshTokenDto } from './dto/refresh-token.dto';
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -69,5 +72,23 @@ export class AuthController {
   @Post('resend-otp')
   public resendOtp(@Body() resendOtpDto: ResendOtpDto) {
     return this.authService.resendOtp(resendOtpDto.email);
+  }
+
+  @Post('forgot-password')
+  @ApiOperation({ summary: 'Gửi lại mã khôi phục mật khẩu' })
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto);
+  }
+
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Đặt lại mật khẩu' })
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto);
+  }
+
+  @Post('refresh-token')
+  @ApiOperation({ summary: 'Refresh token' })
+  async refreshToken(@Body() dto: refreshTokenDto) {
+    return this.authService.refreshToken(dto.refreshToken);
   }
 }

@@ -20,6 +20,14 @@ import { SignInDto } from '../dto/sign-in.dto';
 import { IAuthToken } from '../interfaces/auth-tokens.interface';
 import { User } from 'generated/prisma';
 import { HashingProvider } from './hashing.provider';
+import { ForgotPasswordDto } from '../dto/forgot-password.dto';
+import { ResetPasswordDto } from '../dto/reset-password.dto';
+
+interface JwtPayload {
+  sub: number;
+  email: string;
+  role: string;
+}
 
 @Injectable()
 export class AuthService {
@@ -40,6 +48,12 @@ export class AuthService {
     return {
       message: 'OTP sent to email',
     };
+  }
+
+  async signUpWithoutOtp(dto: SignUpDto) {
+    const user = await this.usersService.createUserWithoutOtp(dto);
+    // (Optional) generate token
+    return this.signToken(user.id, user.email, user.role);
   }
 
   public async signIn(dto: SignInDto): Promise<IAuthToken> {
@@ -146,5 +160,70 @@ export class AuthService {
   private async handleUnverifiedUser(user: User) {
     const otp = await this.verificationsService.generateAndSaveOtp(user.id);
     await this.emailService.sendOtp(user.email, otp.code);
+  }
+
+  async forgotPassword(dto: ForgotPasswordDto) {
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+
+    if (!user) {
+      throw new ForbiddenException('Email not found');
+    }
+
+    const otp = await this.verificationsService.generateAndSaveOtp(user.id);
+
+    // Send OTP via email
+    await this.emailService.sendOtp(user.email, otp.code);
+
+    return { message: 'Password reset email sent' };
+  }
+  async resetPassword(dto: ResetPasswordDto) {
+    const { userId, otpCode, password } = dto;
+
+    const isValid = await this.verificationsService.verifyOtp(+userId, otpCode);
+    if (!isValid) {
+      throw new ForbiddenException('OTP không hợp lệ hoặc đã hết hạn');
+    }
+
+    const hashed = await this.hashingProvider.hashPassword(password);
+    await this.prisma.user.update({
+      where: { id: +userId },
+      data: { password: hashed },
+    });
+
+    return { message: 'Mật khẩu đã được đặt lại thành công' };
+  }
+
+  async refreshToken(refreshToken: string): Promise<IAuthToken> {
+    try {
+      const jwtConfig = this.config.get<JwtConfig>(EConfigKeys.JWT);
+      if (!jwtConfig) {
+        throw new Error(
+          `JWT configuration is missing for key: ${EConfigKeys.JWT}`,
+        );
+      }
+
+      let payload: JwtPayload;
+      try {
+        payload = await this.jwt.verifyAsync<JwtPayload>(refreshToken, {
+          secret: jwtConfig.refreshTokenSecret,
+        });
+      } catch {
+        throw new UnauthorizedException('Invalid or expired refresh token');
+      }
+
+      const user = await this.prisma.user.findUnique({
+        where: { id: payload.sub },
+      });
+
+      if (!user || !user.isVerified) {
+        throw new ForbiddenException('User not found or not verified');
+      }
+
+      return this.signToken(user.id, user.email, user.role);
+    } catch {
+      throw new ForbiddenException('Invalid or expired refresh token');
+    }
   }
 }
