@@ -15,7 +15,6 @@ import { IMailConfig } from 'src/configs/infra/mail.config';
       inject: [ConfigService],
       useFactory: (configService: ConfigService): MailerOptions => {
         const mailConfig = configService.get<IMailConfig>(EConfigKeys.Mail);
-        console.log('✅ Loaded mail config:', mailConfig);
         if (!mailConfig) {
           throw new Error('Missing MailConfig');
         }
