@@ -1,15 +1,15 @@
-POST http://localhost:3001/verification/send-otp
+POST  http://localhost:5005/verification/send-otp
 Content-Type: application/json
 
 {
-  "email": "tuanna@gmail.com"
+  "email": "quanganhcf4@gmail.com"
 }
 
 ###
-POST http://localhost:3001/verification/verify-otp
+POST  http://localhost:5005/verification/verify-otp
 Content-Type: application/json
 
 {
-  "email": "tuanna@gmail.com",
+  "email": "quanganhcf4@gmail.com",
   "otp": "667360"
 }

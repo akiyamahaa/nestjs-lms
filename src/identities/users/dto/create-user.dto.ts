@@ -1,7 +1,8 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEmail,
   IsNotEmpty,
+  IsOptional,
   IsString,
   MaxLength,
   MinLength,
@@ -37,4 +38,9 @@ export class CreateUserDto {
   @MinLength(8)
   @MaxLength(96)
   password: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiPropertyOptional()
+  role?: string; // Optional field for user role
 }

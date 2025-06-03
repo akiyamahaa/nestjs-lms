@@ -4,6 +4,8 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { HashingProvider } from 'src/identities/auth/providers/hashing.provider';
 import { User } from 'generated/prisma';
+import { EditUserDto } from '../dto/edit-user.dto';
+import { ChangePasswordDto } from '../dto/change-password.dto';
 
 @Injectable()
 export class UsersService {
@@ -91,6 +93,52 @@ export class UsersService {
     const { password, ...userWithoutPassword } = newUser;
 
     return userWithoutPassword;
+  }
+
+  async editUser(userId: number, dto: EditUserDto) {
+    const user = await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        ...dto,
+      },
+    });
+
+    // Loại bỏ password khỏi kết quả trả về
+    const { password, ...userWithoutPassword } = user;
+
+    return userWithoutPassword;
+  }
+
+  async changePassword(userId: number, dto: ChangePasswordDto) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new ForbiddenException('User not found');
+    }
+
+    // Verify old password
+    const pwMatches = await this.hashingProvider.comparePassword(
+      dto.oldPassword,
+      user.password || '',
+    );
+    if (!pwMatches) {
+      throw new ForbiddenException('Old password is incorrect');
+    }
+
+    // Hash new password
+    const newHash = await this.hashingProvider.hashPassword(dto.newPassword);
+
+    // Update password in the database
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { password: newHash },
+    });
+
+    return { message: 'Password changed successfully' };
   }
 
   public async createUserWithoutOtp(

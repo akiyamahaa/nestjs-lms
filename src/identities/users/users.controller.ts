@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  ForbiddenException,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { UsersService } from './providers/users.service';
 import {
   ApiBearerAuth,
@@ -11,6 +20,8 @@ import {
 import { CreateUserDto } from './dto/create-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
+import { EditUserDto } from './dto/edit-user.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @UseGuards(JwtAuthGuard)
 @ApiTags('Users')
@@ -45,6 +56,27 @@ export class UserController {
     return this.userService.createUser(createUserDto);
   }
 
+  @Patch()
+  @ApiOperation({ summary: 'Edit user' })
+  editUser(@GetUser('sub') userId: number, @Body() dto: EditUserDto) {
+    if (!userId) {
+      throw new ForbiddenException('User ID is required');
+    }
+    return this.userService.editUser(userId, dto);
+  }
+
+  @Patch('change-password')
+  @ApiOperation({ summary: 'Change user password' })
+  changePassword(
+    @GetUser('sub') userId: number,
+    @Body() dto: ChangePasswordDto,
+  ) {
+    if (!userId) {
+      throw new ForbiddenException('User ID is required');
+    }
+    return this.userService.changePassword(userId, dto);
+  }
+
   /**
    * Get a user by ID.
    * @param id - UUID of the user
@@ -64,7 +96,7 @@ export class UserController {
     },
   })
   @ApiResponse({ status: 404, description: 'User not found' })
-  public getMe(@GetUser('id') userId: number) {
+  public getMe(@GetUser('sub') userId: number) {
     return this.userService.findOneById(userId);
   }
 

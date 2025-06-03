@@ -1,6 +1,7 @@
 import {
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -19,7 +20,7 @@ export class JwtAuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request: IRequestWithUser = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest();
 
     // Check if route is public
     const isPublic = PUBLIC_ROUTES.some(
@@ -52,12 +53,16 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     try {
-      request.user = await this.usersService.findOneById(decoded.sub);
+      request.user = decoded;
     } catch (err) {
-      console.log(err);
-      throw new UnauthorizedException('Unable to verify user');
+      if (err.name === 'TokenExpiredError') {
+        throw new UnauthorizedException('Token has expired');
+      } else if (err.name === 'JsonWebTokenError') {
+        throw new UnauthorizedException('Invalid token');
+      }
+      throw new ForbiddenException('Forbidden resource');
     }
-
+    // Check if user exists
     return true;
   }
 }
