@@ -13,7 +13,7 @@ export class UsersService {
     private prisma: PrismaService,
     // @Inject(HashingProvider)
     private hashingProvider: HashingProvider,
-  ) {}
+  ) { }
 
   public async findOneByEmailWithPassword(email: string): Promise<User> {
     const user = await this.prisma.user.findUnique({
@@ -168,5 +168,22 @@ export class UsersService {
 
     const { password, ...userWithoutPassword } = user;
     return userWithoutPassword;
+  }
+
+  async uploadAvatar(
+    userId: number,
+    file: Express.Multer.File
+  ): Promise<UserWithoutPassword> {
+    if (!file) {
+      throw new ForbiddenException('File is required');
+    }
+    const baseUrl = process.env.BASE_URL;
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: { avatar: file.path ? file.path.replace(/^.*\/image\/upload\//, '') : null },
+    });
+    user.avatar = `${baseUrl}/${user.avatar}`;
+
+    return user;
   }
 }

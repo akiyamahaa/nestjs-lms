@@ -7,6 +7,8 @@ import {
   Patch,
   Post,
   UseGuards,
+  UseInterceptors,
+  UploadedFile
 } from '@nestjs/common';
 import { UsersService } from './providers/users.service';
 import {
@@ -16,12 +18,15 @@ import {
   ApiParam,
   ApiResponse,
   ApiTags,
+  ApiConsumes,
 } from '@nestjs/swagger';
 import { CreateUserDto } from './dto/create-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { EditUserDto } from './dto/edit-user.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { storage } from 'src/cloudinary/cloudinary.storage';
 
 @UseGuards(JwtAuthGuard)
 @ApiTags('Users')
@@ -120,5 +125,47 @@ export class UserController {
   })
   public getUserById(@Param('id') id: number) {
     return this.userService.findOneById(id);
+  }
+
+  /**
+   * Update avatar for the user.
+   * @param userId - ID of the user
+   * @param file - Uploaded file
+   */
+  @Post('upload-avatar')
+  @ApiOperation({ summary: 'Upload user avatar' })
+  @UseInterceptors(FileInterceptor('file', { storage }))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Avatar file upload',
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'User avatar uploaded successfully',
+    schema: {
+      example: {
+        status: 'success',
+        message: 'User avatar uploaded successfully',
+        data: {
+          id: 'uuid',
+          avatar: 'https://example.com/avatar.jpg',
+        },
+      },
+    },
+  })
+  async uploadAvatar(@GetUser('sub') userId: number, @UploadedFile() file: Express.Multer.File) {
+    if (!userId) {
+      throw new ForbiddenException('User ID is required');
+    }
+    return this.userService.uploadAvatar(userId, file);
   }
 }
