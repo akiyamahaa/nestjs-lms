@@ -6,6 +6,7 @@ import { ConfigAppModule } from './configs/config-app.module';
 import { AuthModule } from './identities/auth/auth.module';
 import { UsersModule } from './identities/users/users.module';
 import { AdminModule } from './identities/admin/admin.module';
+import { CategoriesModule } from './catelogs/categories/categories.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { AdminModule } from './identities/admin/admin.module';
     AuthModule,
     UsersModule,
     AdminModule,
+    CategoriesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

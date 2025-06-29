@@ -42,3 +42,21 @@ model OTP {
 
   @@map("otps")
 }
+
+model Category {
+  id                String      @id @default(uuid()) @db.Uuid
+  title             String      @db.VarChar(150)
+  slug              String      @unique @db.VarChar(150)
+  short_description String
+  status            CategoryStatus @default(draft)
+  created_at        DateTime    @default(now())
+  updated_at        DateTime    @updatedAt
+  deleted_at        DateTime?   @db.Timestamp(6)
+  @@map("categories")
+}
+
+enum CategoryStatus {
+  draft
+  published
+  archived
+}
