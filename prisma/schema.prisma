@@ -15,16 +15,16 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  email     String   @unique
-  fullName  String
-  password  String
-  avatar    String?
-  isVerified Boolean @default(false)
-  role      String   @default("user")
-  otps      OTP[]
+  id         Int      @id @default(autoincrement())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  email      String   @unique
+  fullName   String
+  password   String
+  avatar     String?
+  isVerified Boolean  @default(false)
+  role       String   @default("user")
+  otps       OTP[]
 
   @@map("users")
 }
@@ -44,18 +44,114 @@ model OTP {
 }
 
 model Category {
-  id                String      @id @default(uuid()) @db.Uuid
-  title             String      @db.VarChar(150)
-  slug              String      @unique @db.VarChar(150)
+  id                String         @id @default(uuid()) @db.Uuid
+  title             String         @db.VarChar(150)
+  slug              String         @unique @db.VarChar(150)
   short_description String
   status            CategoryStatus @default(draft)
-  created_at        DateTime    @default(now())
-  updated_at        DateTime    @updatedAt
-  deleted_at        DateTime?   @db.Timestamp(6)
+  created_at        DateTime       @default(now())
+  updated_at        DateTime       @updatedAt
+  deleted_at        DateTime?      @db.Timestamp(6)
+
+  products Product[]
+
   @@map("categories")
 }
 
 enum CategoryStatus {
+  draft
+  published
+  archived
+}
+
+model Product {
+  id                String  @id @default(uuid()) @db.Uuid
+  title             String  @db.VarChar(255)
+  slug              String  @unique @db.VarChar(255)
+  short_description String
+  description       String?
+
+  category_id String   @db.Uuid
+  category    Category @relation(fields: [category_id], references: [id])
+
+  thumbnail         String        @db.VarChar(255)
+  label             ProductLabel  @default(new)
+  status            ProductStatus @default(draft)
+  requirements      String
+  learning_outcomes String
+  preview_video     String?       @db.VarChar(255)
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime? @db.Timestamp(6)
+
+  modules Module[]
+
+  @@unique([label, slug])
+  @@map("products")
+}
+
+model Module {
+  id                String       @id @default(uuid()) @db.Uuid
+  course_id         String       @db.Uuid
+  course            Product      @relation(fields: [course_id], references: [id])
+  title             String       @db.VarChar(255)
+  short_description String
+  order             Int          @default(0)
+  status            ModuleStatus @default(draft)
+  created_at        DateTime     @default(now())
+  updated_at        DateTime     @updatedAt
+  deleted_at        DateTime?    @db.Timestamp(6)
+
+  lessons Lesson[]
+
+  @@map("modules")
+}
+
+model Lesson {
+  id             String       @id @default(uuid()) @db.Uuid
+  module_id      String       @db.Uuid
+  module         Module       @relation(fields: [module_id], references: [id])
+  title          String       @db.VarChar(255)
+  description    String
+  type           LessonType
+  is_previewable Boolean      @default(false)
+  status         LessonStatus @default(draft)
+  order          Int          @default(0)
+  attachment     String?      @db.VarChar(255)
+  created_at     DateTime     @default(now())
+  updated_at     DateTime     @updatedAt
+  deleted_at     DateTime?    @db.Timestamp(6)
+
+  @@map("lessons")
+}
+
+enum ProductLabel {
+  new
+  hot
+  featured
+  best_seller
+}
+
+enum ProductStatus {
+  draft
+  published
+  archived
+}
+
+enum ModuleStatus {
+  draft
+  published
+  archived
+}
+
+enum LessonType {
+  video
+  content
+  quiz
+}
+
+enum LessonStatus {
   draft
   published
   archived

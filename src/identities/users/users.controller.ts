@@ -128,7 +128,7 @@ export class UserController {
   }
 
   /**
-   * Update avatar for the user.
+   * Upload avatar for the user.
    * @param userId - ID of the user
    * @param file - Uploaded file
    */
@@ -162,10 +162,17 @@ export class UserController {
       },
     },
   })
-  async uploadAvatar(@GetUser('sub') userId: number, @UploadedFile() file: Express.Multer.File) {
+  async uploadAvatar(
+    @GetUser('sub') userId: number,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
     if (!userId) {
       throw new ForbiddenException('User ID is required');
     }
-    return this.userService.uploadAvatar(userId, file);
+    if (!file) {
+      throw new ForbiddenException('No file uploaded');
+    }
+    console.log('Uploading avatar for user ID:', userId);
+    return await this.userService.uploadAvatar(userId, file);
   }
 }

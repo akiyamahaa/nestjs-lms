@@ -1,0 +1,48 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service';
+
+@Injectable()
+export class ProductsService {
+  constructor(private prisma: PrismaService) {}
+
+  private getFullUrl(path: string) {
+    const baseUrl = process.env.BASE_URL || 'http://localhost:5005';
+    if (!path) return null;
+    // Nếu path đã là url tuyệt đối thì giữ nguyên
+    if (/^https?:\/\//.test(path)) return path;
+    return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\/+/, '')}`;
+  }
+
+  async findAllForUser(filter: { category_id?: string; search?: string }) {
+    const products = await this.prisma.product.findMany({
+      where: {
+        deleted_at: null,
+        status: 'published',
+        ...(filter.category_id && { category_id: filter.category_id }),
+        ...(filter.search && { title: { contains: filter.search, mode: 'insensitive' } }),
+      },
+      orderBy: { created_at: 'desc' },
+      include: { modules: true },
+    });
+
+    return products.map((p) => ({
+      ...p,
+      thumbnail: this.getFullUrl(p.thumbnail),
+    }));
+  }
+
+  async findOneForUser(id: string) {
+    const product = await this.prisma.product.findUnique({
+      where: { id },
+      include: { modules: { include: { lessons: true } } },
+    });
+    if (!product || product.deleted_at || product.status !== 'published') {
+      throw new NotFoundException('Course not found');
+    }
+    
+    return {
+      ...product,
+      thumbnail: this.getFullUrl(product.thumbnail),
+    };
+  }
+}
