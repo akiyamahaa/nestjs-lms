@@ -24,7 +24,7 @@ import { ForgotPasswordDto } from '../dto/forgot-password.dto';
 import { ResetPasswordDto } from '../dto/reset-password.dto';
 
 interface JwtPayload {
-  sub: number;
+  sub: string;
   email: string;
   role: string;
 }
@@ -125,7 +125,7 @@ export class AuthService {
   }
 
   async signToken(
-    userId: number,
+    userId: string,
     email: string,
     role: string,
   ): Promise<IAuthToken> {
@@ -181,14 +181,14 @@ export class AuthService {
   async resetPassword(dto: ResetPasswordDto) {
     const { userId, otpCode, password } = dto;
 
-    const isValid = await this.verificationsService.verifyOtp(+userId, otpCode);
+    const isValid = await this.verificationsService.verifyOtp(userId, otpCode);
     if (!isValid) {
       throw new ForbiddenException('OTP không hợp lệ hoặc đã hết hạn');
     }
 
     const hashed = await this.hashingProvider.hashPassword(password);
     await this.prisma.user.update({
-      where: { id: +userId },
+      where: { id: userId },
       data: { password: hashed },
     });
 

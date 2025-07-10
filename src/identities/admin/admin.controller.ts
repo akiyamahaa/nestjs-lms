@@ -47,7 +47,7 @@ export class AdminController {
   @Get(':id')
   @ApiOperation({ summary: 'Admin get user by ID' })
   async getUserById(@Param('id') id: string) {
-    return this.AdminService.getUserById(Number(id));
+    return this.AdminService.getUserById(id);
   }
 
   @Post()
@@ -59,13 +59,13 @@ export class AdminController {
   @Patch(':id')
   @ApiOperation({ summary: 'Admin edit user' })
   async editUser(@Param('id') id: string, @Body() dto: EditUserDto) {
-    return this.AdminService.editUser(Number(id), dto);
+    return this.AdminService.editUser(id, dto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Admin delete user' })
   async deleteUser(@Param('id') id: string) {
-    return this.AdminService.deleteUser(Number(id));
+    return this.AdminService.deleteUser(id);
   }
 }

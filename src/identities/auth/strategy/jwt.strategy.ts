@@ -8,7 +8,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 // Định nghĩa interface rõ ràng cho JWT payload
 interface JwtPayload {
-  sub: number;
+  sub: string;
   email: string;
 }
 

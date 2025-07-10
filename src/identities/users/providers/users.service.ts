@@ -30,7 +30,7 @@ export class UsersService {
     return user;
   }
 
-  public async findOneById(userId: number): Promise<UserWithoutPassword> {
+  public async findOneById(userId: string): Promise<UserWithoutPassword> {
     const user = await this.prisma.user.findUnique({
       where: {
         id: userId,
@@ -95,7 +95,7 @@ export class UsersService {
     return userWithoutPassword;
   }
 
-  async editUser(userId: number, dto: EditUserDto) {
+  async editUser(userId: string, dto: EditUserDto) {
     const user = await this.prisma.user.update({
       where: {
         id: userId,
@@ -111,7 +111,7 @@ export class UsersService {
     return userWithoutPassword;
   }
 
-  async changePassword(userId: number, dto: ChangePasswordDto) {
+  async changePassword(userId: string, dto: ChangePasswordDto) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -171,7 +171,7 @@ export class UsersService {
   }
 
   async uploadAvatar(
-    userId: number,
+    userId: string,
     file: Express.Multer.File
   ): Promise<UserWithoutPassword> {
     if (!file) {

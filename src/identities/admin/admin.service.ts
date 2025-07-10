@@ -40,8 +40,8 @@ export class AdminService {
     };
   }
 
-  async getUserById(id: number) {
-    if (isNaN(id)) {
+  async getUserById(id: string) {
+    if (id) {
       throw new NotFoundException(`Invalid ID: ${id}`);
     }
 
@@ -79,7 +79,7 @@ export class AdminService {
     return user;
   }
 
-  async editUser(id: number, dto: EditUserDto) {
+  async editUser(id: string, dto: EditUserDto) {
     const user = await this.prisma.user.findUnique({
       where: { id },
     });
@@ -94,7 +94,7 @@ export class AdminService {
     });
   }
 
-  async deleteUser(id: number) {
+  async deleteUser(id: string) {
     const user = await this.prisma.user.findUnique({
       where: { id },
     });

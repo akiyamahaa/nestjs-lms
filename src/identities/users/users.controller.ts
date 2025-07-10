@@ -63,7 +63,7 @@ export class UserController {
 
   @Patch()
   @ApiOperation({ summary: 'Edit user' })
-  editUser(@GetUser('sub') userId: number, @Body() dto: EditUserDto) {
+  editUser(@GetUser('sub') userId: string, @Body() dto: EditUserDto) {
     if (!userId) {
       throw new ForbiddenException('User ID is required');
     }
@@ -73,7 +73,7 @@ export class UserController {
   @Patch('change-password')
   @ApiOperation({ summary: 'Change user password' })
   changePassword(
-    @GetUser('sub') userId: number,
+    @GetUser('sub') userId: string,
     @Body() dto: ChangePasswordDto,
   ) {
     if (!userId) {
@@ -101,7 +101,7 @@ export class UserController {
     },
   })
   @ApiResponse({ status: 404, description: 'User not found' })
-  public getMe(@GetUser('sub') userId: number) {
+  public getMe(@GetUser('sub') userId: string) {
     return this.userService.findOneById(userId);
   }
 
@@ -123,7 +123,7 @@ export class UserController {
       },
     },
   })
-  public getUserById(@Param('id') id: number) {
+  public getUserById(@Param('id') id: string) {
     return this.userService.findOneById(id);
   }
 
@@ -163,7 +163,7 @@ export class UserController {
     },
   })
   async uploadAvatar(
-    @GetUser('sub') userId: number,
+    @GetUser('sub') userId: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
     if (!userId) {

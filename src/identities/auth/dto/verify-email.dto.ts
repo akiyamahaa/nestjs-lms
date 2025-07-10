@@ -6,8 +6,8 @@ export class VerifyEmailDto {
     description: 'User ID received after signup',
     example: 1,
   })
-  @IsNumber()
-  userId: number;
+  @IsString()
+  userId: string;
 
   @ApiProperty({
     description: 'OTP code received in email',

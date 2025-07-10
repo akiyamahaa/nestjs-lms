@@ -15,7 +15,7 @@ datasource db {
 }
 
 model User {
-  id         Int      @id @default(autoincrement())
+  id         String  @id @default(uuid()) @db.Uuid
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   email      String   @unique
@@ -26,18 +26,20 @@ model User {
   role       String   @default("user")
   otps       OTP[]
 
+  enrollments Enrollment[]
+
   @@map("users")
 }
 
 model OTP {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(uuid()) @db.Uuid
   createdAt DateTime @default(now())
   expiresAt DateTime
 
   code   String
   isUsed Boolean @default(false)
 
-  userId Int
+  userId String @db.Uuid
   user   User @relation(fields: [userId], references: [id])
 
   @@map("otps")
@@ -86,6 +88,7 @@ model Product {
   deleted_at DateTime? @db.Timestamp(6)
 
   modules Module[]
+  enrollments Enrollment[]
 
   @@unique([label, slug])
   @@map("products")
@@ -124,6 +127,18 @@ model Lesson {
   deleted_at     DateTime?    @db.Timestamp(6)
 
   @@map("lessons")
+}
+
+model Enrollment {
+  id         String   @id @default(uuid()) @db.Uuid
+  user_id    String   @db.Uuid
+  product_id String   @db.Uuid
+  product    Product @relation(fields: [product_id], references: [id])
+  user       User    @relation(fields: [user_id], references: [id])
+  created_at DateTime @default(now())
+
+  @@unique([user_id, product_id])
+  @@map("enrollments")
 }
 
 enum ProductLabel {

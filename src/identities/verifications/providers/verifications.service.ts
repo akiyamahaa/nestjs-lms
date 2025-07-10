@@ -12,7 +12,7 @@ export class VerificationsService {
    */
   constructor(private prisma: PrismaService) {}
 
-  async generateAndSaveOtp(userId: number) {
+  async generateAndSaveOtp(userId: string) {
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes from now
 
@@ -26,7 +26,7 @@ export class VerificationsService {
     });
   }
 
-  async verifyOtp(userId: number, code: string) {
+  async verifyOtp(userId: string, code: string) {
     const otp = await this.prisma.oTP.findFirst({
       where: {
         userId,
