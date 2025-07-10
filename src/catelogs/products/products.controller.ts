@@ -10,13 +10,17 @@ export class ProductsController {
   @ApiOperation({ summary: 'Lấy danh sách khóa học (course) cho user' })
   @ApiQuery({ name: 'category_id', required: false, description: 'Lọc theo category' })
   @ApiQuery({ name: 'search', required: false, description: 'Tìm kiếm theo tiêu đề' })
+  @ApiQuery({ name: 'page', required: false, description: 'Số trang' })
+  @ApiQuery({ name: 'perPage', required: false, description: 'Số lượng khóa học trên mỗi trang' })
   @ApiResponse({ status: 200, description: 'Danh sách khóa học' })
   @Get()
   async getCourses(
     @Query('category_id') category_id?: string,
     @Query('search') search?: string,
+    @Query('page') page?: number,
+    @Query('perPage') perPage?: number,
   ) {
-    return this.productsService.findAllForUser({ category_id, search });
+    return this.productsService.findAllForUser({ category_id, search, page, perPage });
   }
 
   @ApiOperation({ summary: 'Lấy chi tiết khóa học cho user' })

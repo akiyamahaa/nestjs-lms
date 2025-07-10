@@ -11,6 +11,7 @@ import { ProductsModule } from './catelogs/products/products.module';
 import { ConfigModule } from '@nestjs/config';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { EnrollmentsModule } from './enrollments/enrollments.module';
+import { ReviewsModule } from './reviews/reviews.module';
 
 @Module({
   imports: [
@@ -25,7 +26,8 @@ import { EnrollmentsModule } from './enrollments/enrollments.module';
       isGlobal: true,
     }),
     CloudinaryModule,
-    EnrollmentsModule
+    EnrollmentsModule,
+    ReviewsModule
   ],
   controllers: [AppController],
   providers: [AppService],
