@@ -15,6 +15,8 @@ import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiConsumes } fr
 import { AdminProductsService } from './admin-products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { storage } from 'src/cloudinary/cloudinary.storage';
+import { validateOrReject } from 'class-validator';
+import { plainToInstance } from 'class-transformer';
 
 @ApiTags('Products')
 @Controller('products')
@@ -29,7 +31,7 @@ export class AdminProductsController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Tạo mới sản phẩm (có upload ảnh)' })
+  @ApiOperation({ summary: 'Tạo mới sản phẩm' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     type: CreateProductDto,
@@ -41,28 +43,36 @@ export class AdminProductsController {
     }
   }))
   async create(
-    @Body() data: CreateProductDto,
+    @Body() data: any,
     @UploadedFile() file: Express.Multer.File
   ) {
-    console.log('typeof modules:', typeof data.modules, data.modules);
-    let modules = data.modules;
-    if (typeof modules === 'string') {
-      try {
-        modules = JSON.parse(modules);
-      } catch {
-        throw new BadRequestException('modules must be a valid JSON array');
+    // Parse modules nếu là string
+    if (typeof data.modules === 'string') {
+      const modulesStr = data.modules as string;
+      if (modulesStr.trim() === '' || modulesStr === 'null') {
+        data.modules = [];
+      } else {
+        try {
+          data.modules = JSON.parse(modulesStr);
+        } catch {
+          throw new BadRequestException('modules must be a valid JSON array string (parse error)');
+        }
       }
     }
-    if (modules && !Array.isArray(modules)) {
-      throw new BadRequestException('modules must be an array');
-    }
-    // Optionally: validate each module object here if needed
+    // ...parse các trường lồng nhau khác nếu cần...
+
+    // Convert về instance của DTO và validate
+    const dto = plainToInstance(CreateProductDto, data);
+    await validateOrReject(dto);
+
+    // Log để kiểm tra
+    console.log('data:', dto);
 
     const thumbnailPath = file ? file.path : undefined;
     return this.productsService.create({
-      ...data,
+      ...dto,
       thumbnail: thumbnailPath,
-      modules,
+      modules: dto.modules,
     });
   }
 
@@ -88,25 +98,73 @@ export class AdminProductsController {
   }))
   async update(
     @Param('id') id: string,
-    @Body() data: Partial<CreateProductDto>,
+    @Body() data: any,
     @UploadedFile() file: Express.Multer.File
   ) {
-    let modules = data.modules;
-    if (typeof modules === 'string') {
-      try {
-        modules = JSON.parse(modules);
-      } catch {
-        throw new BadRequestException('modules must be a valid JSON array');
+    // Parse modules nếu là string
+    if (typeof data.modules === 'string') {
+      const modulesStr = data.modules as string;
+      if (modulesStr.trim() === '' || modulesStr === 'null') {
+        data.modules = [];
+      } else {
+        try {
+          data.modules = JSON.parse(modulesStr);
+        } catch {
+          throw new BadRequestException('modules must be a valid JSON array string (parse error)');
+        }
       }
     }
-    if (modules && !Array.isArray(modules)) {
+    if (data.modules === undefined || data.modules === null) {
+      data.modules = [];
+    }
+    if (data.modules && !Array.isArray(data.modules)) {
       throw new BadRequestException('modules must be an array');
     }
+    // Kiểm tra từng phần tử phải là object
+    if (Array.isArray(data.modules)) {
+      const invalid = data.modules.some(
+        (m) => typeof m !== 'object' || m === null || Array.isArray(m)
+      );
+      if (invalid) {
+        throw new BadRequestException('each value in modules must be a non-null object');
+      }
+    }
+
+    // Parse tiếp các trường lồng nhau nếu cần (lessons, quiz_questions)
+    if (data.modules) {
+      data.modules = data.modules.map((module: any) => {
+        if (typeof module.lessons === 'string') {
+          try {
+            module.lessons = JSON.parse(module.lessons);
+          } catch {
+            throw new BadRequestException('lessons must be a valid JSON array');
+          }
+        }
+        if (module.lessons) {
+          module.lessons = module.lessons.map((lesson: any) => {
+            if (typeof lesson.quiz_questions === 'string') {
+              try {
+                lesson.quiz_questions = JSON.parse(lesson.quiz_questions);
+              } catch {
+                throw new BadRequestException('quiz_questions must be a valid JSON array');
+              }
+            }
+            return lesson;
+          });
+        }
+        return module;
+      });
+    }
+
+    // Convert về instance của DTO và validate
+    const dto = plainToInstance(CreateProductDto, data);
+    await validateOrReject(dto);
+
     const thumbnailPath = file ? file.path : undefined;
     return this.productsService.update(id, {
-      ...data,
+      ...dto,
       ...(thumbnailPath && { thumbnail: thumbnailPath }),
-      modules,
+      modules: dto.modules,
     });
   }
 

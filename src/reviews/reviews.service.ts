@@ -36,6 +36,37 @@ async createReview(userId: string, productId: string, rating: number, comment?: 
     });
   }
 
+  async getFiveStarLatest(limit: number = 10) {
+    // Lấy base url
+    const baseUrl = process.env.BASE_URL || 'http://localhost:5005';
+    // Lấy review có rating cao nhất (nếu nhiều thì lấy mới nhất)
+    const reviews = await this.prisma.review.findMany({
+      where: {
+        status: true,
+      },
+      orderBy: [
+        { rating: 'desc' },
+        { created_at: 'desc' },
+      ],
+      take: limit,
+      include: {
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            avatar: true,
+          },
+        },
+        // product: true,
+      },
+    });
+    // Nối avatar và thumbnail với base url
+    return reviews.map((r) => ({
+      ...r,
+      user: r.user ? { ...r.user, avatar: r.user.avatar ? `${baseUrl.replace(/\/$/, '')}/${r.user.avatar.replace(/^\/+/, '')}` : null } : null,
+    }));
+  }
+
 //   async updateProductRating(productId: string) {
 //     const reviews = await this.prisma.review.findMany({ where: { product_id: productId } });
 //     const rating_avg = reviews.length

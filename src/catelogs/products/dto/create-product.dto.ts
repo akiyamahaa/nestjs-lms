@@ -8,11 +8,75 @@ import {
     IsEnum,
     IsUUID,
     MaxLength,
-    ValidateNested
+    ValidateNested,
+    IsArray
 } from 'class-validator';
-import { ProductStatus } from '../enum/product-status.enum';
-import { ProductLabel } from '../enum/product-label.enum';
 import { Type } from 'class-transformer';
+// import { ProductStatus } from '../enum/product-status.enum';
+// import { ProductLabel } from '../enum/product-label.enum';
+import { LessonType } from 'generated/prisma';
+import { LessonStatus } from 'generated/prisma';
+import { ProductStatus } from 'generated/prisma';
+import { ProductLabel } from 'generated/prisma';
+
+class CreateQuizQuestionDto {
+    @ApiProperty()
+    @IsString()
+    question: string;
+
+    @ApiProperty({ type: [String] })
+    @IsArray()
+    @IsString({ each: true })
+    answers: string[];
+
+    @ApiProperty()
+    @IsString()
+    correct_answer: string;
+
+    @ApiPropertyOptional()
+    @IsString()
+    @IsOptional()
+    explanation?: string;
+}
+
+class CreateLessonDto {
+    @ApiProperty()
+    @IsString()
+    title: string;
+
+    @ApiPropertyOptional()
+    @IsString()
+    @IsOptional()
+    description?: string;
+
+    @ApiProperty({ enum: LessonType })
+    @IsEnum(LessonType)
+    type: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    is_previewable?: boolean;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    order?: number;
+
+    @ApiPropertyOptional()
+    @IsString()
+    @IsOptional()
+    attachment?: string;
+
+    @ApiPropertyOptional({ enum: LessonStatus })
+    @IsEnum(LessonStatus)
+    @IsOptional()
+    status?: string;
+
+    @ApiPropertyOptional({ type: [CreateQuizQuestionDto] })
+    @ValidateNested({ each: true })
+    @Type(() => CreateQuizQuestionDto)
+    @IsOptional()
+    quiz_questions?: CreateQuizQuestionDto[];
+}
 
 class CreateModuleDto {
     @ApiProperty()
@@ -27,10 +91,16 @@ class CreateModuleDto {
     @IsOptional()
     order?: number;
 
-    @ApiPropertyOptional({ enum: ProductStatus, default: ProductStatus.DRAFT })
+    @ApiPropertyOptional({ enum: ProductStatus, default: 'draft' })
     @IsEnum(ProductStatus)
     @IsOptional()
     status?: ProductStatus;
+
+    @ApiPropertyOptional({ type: [CreateLessonDto] })
+    @ValidateNested({ each: true })
+    @Type(() => CreateLessonDto)
+    @IsOptional()
+    lessons?: CreateLessonDto[];
 }
 
 export class CreateProductDto {
@@ -61,12 +131,12 @@ export class CreateProductDto {
     @IsOptional()
     thumbnail: any;
 
-    @ApiPropertyOptional({ enum: ProductLabel, default: ProductLabel.NEW })
+    @ApiPropertyOptional({ enum: ProductLabel, default: 'new' })
     @IsEnum(ProductLabel)
     @IsOptional()
     label?: ProductLabel;
 
-    @ApiPropertyOptional({ enum: ProductStatus, default: ProductStatus.DRAFT })
+    @ApiPropertyOptional({ enum: ProductStatus, default: 'draft' })
     @IsEnum(ProductStatus)
     @IsOptional()
     status?: ProductStatus;
@@ -86,6 +156,8 @@ export class CreateProductDto {
 
     @ApiProperty({ type: [CreateModuleDto], required: false })
     @IsOptional()
-    modules?: any;
+    @ValidateNested({ each: true })
+    @Type(() => CreateModuleDto)
+    modules?: CreateModuleDto[];
 }
 

@@ -128,6 +128,8 @@ model Lesson {
   updated_at     DateTime     @updatedAt
   deleted_at     DateTime?    @db.Timestamp(6)
 
+  question QuizQuestion[]
+
   @@map("lessons")
 }
 
@@ -188,4 +190,32 @@ enum LessonStatus {
   draft
   published
   archived
+}
+
+model QuizQuestion {
+  id           String       @id @default(uuid()) @db.Uuid
+  lesson_id    String       @db.Uuid
+  lesson       Lesson       @relation(fields: [lesson_id], references: [id])
+  question     String
+  explanation  String?
+  created_at   DateTime     @default(now())
+  updated_at   DateTime     @updatedAt
+  deleted_at   DateTime?    @db.Timestamp(6)
+
+  answers      QuizAnswer[]
+
+  @@map("quiz_questions")
+}
+
+model QuizAnswer {
+  id             String       @id @default(uuid()) @db.Uuid
+  quiz_question_id String     @db.Uuid
+  quiz_question  QuizQuestion @relation(fields: [quiz_question_id], references: [id])
+  answer         String
+  is_correct     Boolean      @default(false)
+  created_at     DateTime     @default(now())
+  updated_at     DateTime     @updatedAt
+  deleted_at     DateTime?    @db.Timestamp(6)
+
+  @@map("quiz_answers")
 }
