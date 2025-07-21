@@ -12,6 +12,7 @@ import { ConfigModule } from '@nestjs/config';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { EnrollmentsModule } from './enrollments/enrollments.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { ChallengeModule } from './catelogs/challenge/challenge.module';
 
 @Module({
   imports: [
@@ -27,7 +28,8 @@ import { ReviewsModule } from './reviews/reviews.module';
     }),
     CloudinaryModule,
     EnrollmentsModule,
-    ReviewsModule
+    ReviewsModule,
+    ChallengeModule
   ],
   controllers: [AppController],
   providers: [AppService],

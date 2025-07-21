@@ -219,3 +219,51 @@ model QuizAnswer {
 
   @@map("quiz_answers")
 }
+
+enum ChallengeType {
+  quiz
+  assignment
+  exam
+}
+
+model Challenge {
+  id          String           @id @default(uuid()) @db.Uuid
+  title       String
+  slug        String           @unique @db.VarChar(255)
+  description String?
+  type        ChallengeType
+  order       Int              @default(0)
+  status      ChallengeStatus  @default(draft)
+  created_at  DateTime         @default(now())
+  updated_at  DateTime         @updatedAt
+
+  questions   ChallengeQuestion[]
+}
+
+enum ChallengeStatus {
+  draft
+  published
+  archived
+}
+
+model ChallengeQuestion {
+  id           String           @id @default(uuid()) @db.Uuid
+  challenge_id String           @db.Uuid
+  challenge    Challenge        @relation(fields: [challenge_id], references: [id])
+  question     String
+  explanation  String?
+  created_at   DateTime         @default(now())
+  updated_at   DateTime         @updatedAt
+
+  answers      ChallengeAnswer[]
+}
+
+model ChallengeAnswer {
+  id                    String            @id @default(uuid()) @db.Uuid
+  challenge_question_id String            @db.Uuid
+  challenge_question    ChallengeQuestion @relation(fields: [challenge_question_id], references: [id])
+  answer                String
+  is_correct            Boolean           @default(false)
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+}
