@@ -1,10 +1,11 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiQuery, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiQuery, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { ChallengeService } from './challenge.service';
-// import { JwtAuthGuard } from 'src/identities/auth/guards/jwt.guard';
+import { JwtAuthGuard } from 'src/identities/auth/guards/jwt.guard';
 
 @ApiTags('User - Challenge')
-// @UseGuards(JwtAuthGuard) // Bỏ comment nếu muốn bảo vệ toàn bộ
+@UseGuards(JwtAuthGuard)  
+@ApiBearerAuth()
 @Controller('challenge')
 export class ChallengeController {
   constructor(private readonly challengeService: ChallengeService) {}
