@@ -9,7 +9,6 @@ export class VerifyOtpDto {
   @IsString()
   userId: string;
 
-
   @ApiProperty({
     description: 'OTP code received in email',
     example: '123456'
