@@ -15,13 +15,13 @@ export class EnrollmentsController {
   @ApiOperation({ summary: 'Đăng ký khóa học' })
   @ApiParam({ name: 'courseId', description: 'ID khóa học', type: String })
   @Post(':courseId')
-  async enroll(@GetUser('sub') userId: string, @Param('courseId') courseId: string) {
+  async enroll(@GetUser('id') userId: string, @Param('courseId') courseId: string) {
     return this.enrollmentsService.enroll(userId, courseId);
   }
 
   @ApiOperation({ summary: 'Lấy danh sách khóa học đã đăng ký' })
   @Get('my')
-  async getMyEnrollments(@GetUser('sub') userId: string) {
+  async getMyEnrollments(@GetUser('id') userId: string) {
     return this.enrollmentsService.getMyEnrollments(userId);
   }
 }

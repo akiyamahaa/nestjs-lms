@@ -19,7 +19,7 @@ export class ReviewsController {
   @ApiBody({ schema: { example: { rating: 5, comment: 'Khóa học rất hay!' } } })
   @Post(':productId')
   async createReview(
-    @GetUser('sub') userId: string,
+    @GetUser('id') userId: string,
     @Param('productId') productId: string,
     @Body() body: { rating: number; comment?: string }
   ) {

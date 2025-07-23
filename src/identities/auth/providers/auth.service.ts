@@ -47,6 +47,7 @@ export class AuthService {
     await this.emailService.sendOtp(user.email, otp.code);
     return {
       message: 'OTP sent to email',
+      userId: user.id,
     };
   }
 
@@ -121,7 +122,10 @@ export class AuthService {
     const otp = await this.verificationsService.generateAndSaveOtp(user.id);
     await this.emailService.sendOtp(email, otp.code);
 
-    return { message: 'OTP resent successfully' };
+    return { 
+      userId: user.id,
+      message: 'OTP resent successfully' 
+    };
   }
 
   async signToken(
@@ -176,7 +180,10 @@ export class AuthService {
     // Send OTP via email
     await this.emailService.sendOtp(user.email, otp.code);
 
-    return { message: 'Password reset email sent' };
+    return { 
+      userId: user.id,
+      message: 'Password reset email sent' 
+    };
   }
   async resetPassword(dto: ResetPasswordDto) {
     const { userId, otpCode, password } = dto;

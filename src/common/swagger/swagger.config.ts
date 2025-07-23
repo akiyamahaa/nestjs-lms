@@ -1,7 +1,7 @@
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { INestApplication } from '@nestjs/common';
 
-export function setupSwagger(app: INestApplication, port: number = 3001): void {
+export function setupSwagger(app: INestApplication, port: number = 5005): void {
   const config = new DocumentBuilder()
     .setTitle('📚 LMS API') // ✅ Project name
     .setDescription('API documentation for LMS, an online book marketplace') // ✅ API description
@@ -9,7 +9,7 @@ export function setupSwagger(app: INestApplication, port: number = 3001): void {
     .addBearerAuth() // ✅ Enables JWT Authentication in Swagger UI
     // .setContact('LMS Team', 'https://lms.com', 'support@lms.com') // ✅ Contact info
     .setLicense('MIT', 'https://opensource.org/licenses/MIT') // ✅ License info
-    .addServer(`http://localhost:${port}`, 'Local Development') // ✅ Server definition
+    // .addServer(`http://localhost:${port}`, 'Local Development') // ✅ Server definition
     .addServer(
       `${process.env.DOMAIN ? process.env.DOMAIN : `http://localhost:${port}`}`,
       'Development API',
