@@ -22,14 +22,14 @@ import {
 } from '@nestjs/swagger';
 import { CreateUserDto } from './dto/create-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
-import { GetUser } from '../auth/decorators/get-user.decorator';
+import { GetUser } from 'src/identities/auth/decorators/get-user.decorator';
 import { EditUserDto } from './dto/edit-user.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { storage } from 'src/cloudinary/cloudinary.storage';
 
-@UseGuards(JwtAuthGuard)
 @ApiTags('Users')
+@UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 @Controller('users')
 export class UserController {
@@ -38,32 +38,32 @@ export class UserController {
   /**
    * Create a new user.
    */
-  @Post()
-  @ApiOperation({ summary: 'Create new user' })
-  @ApiBody({ type: CreateUserDto })
-  @ApiResponse({
-    status: 201,
-    description: 'User created successfully',
-    schema: {
-      example: {
-        status: 'success',
-        message: 'User created successfully',
-        data: {
-          id: 'uuid',
-          fullName: 'quanganh',
-          email: 'quanganh@example.com',
-        },
-      },
-    },
-  })
-  @ApiResponse({ status: 409, description: 'Email already exists' })
-  public createUser(@Body() createUserDto: CreateUserDto) {
-    return this.userService.createUser(createUserDto);
-  }
+  // @Post()
+  // @ApiOperation({ summary: 'Create new user' })
+  // @ApiBody({ type: CreateUserDto })
+  // @ApiResponse({
+  //   status: 201,
+  //   description: 'User created successfully',
+  //   schema: {
+  //     example: {
+  //       status: 'success',
+  //       message: 'User created successfully',
+  //       data: {
+  //         id: 'uuid',
+  //         fullName: 'quanganh',
+  //         email: 'quanganh@example.com',
+  //       },
+  //     },
+  //   },
+  // })
+  // @ApiResponse({ status: 409, description: 'Email already exists' })
+  // public createUser(@Body() createUserDto: CreateUserDto) {
+  //   return this.userService.createUser(createUserDto);
+  // }
 
   @Patch()
   @ApiOperation({ summary: 'Edit user' })
-  editUser(@GetUser('sub') userId: string, @Body() dto: EditUserDto) {
+  editUser(@GetUser('id') userId: string, @Body() dto: EditUserDto) {
     if (!userId) {
       throw new ForbiddenException('User ID is required');
     }
@@ -73,7 +73,7 @@ export class UserController {
   @Patch('change-password')
   @ApiOperation({ summary: 'Change user password' })
   changePassword(
-    @GetUser('sub') userId: string,
+    @GetUser('id') userId: string,
     @Body() dto: ChangePasswordDto,
   ) {
     if (!userId) {
@@ -82,13 +82,8 @@ export class UserController {
     return this.userService.changePassword(userId, dto);
   }
 
-  /**
-   * Get a user by ID.
-   * @param id - UUID of the user
-   */
   @Get('me')
   @ApiOperation({ summary: 'Get user profile by Id' })
-  @ApiParam({ name: 'id', type: 'number', description: 'User UUID' })
   @ApiResponse({
     status: 200,
     description: 'Returns the user',
@@ -101,7 +96,8 @@ export class UserController {
     },
   })
   @ApiResponse({ status: 404, description: 'User not found' })
-  public getMe(@GetUser('sub') userId: string) {
+  public getMe(@GetUser('id') userId: string) {
+    console.log('Getting user profile for ID:', userId);
     return this.userService.findOneById(userId);
   }
 
@@ -163,7 +159,7 @@ export class UserController {
     },
   })
   async uploadAvatar(
-    @GetUser('sub') userId: string,
+    @GetUser('id') userId: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
     if (!userId) {

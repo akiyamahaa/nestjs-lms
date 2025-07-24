@@ -1,6 +1,7 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { VerificationsService } from './providers/verifications.service';
+import { VerifyOtpDto } from './dto/verifyOtp.dto';
 
 @ApiTags('Email Verification')
 @Controller('verification')
@@ -13,7 +14,7 @@ export class VerificationsController {
   }
 
   @Post('verify-otp')
-  async verifyOtp(@Body('userId') userId: string, @Body('code') code: string) {
-    return this.verificationService.verifyOtp(userId, code);
+  async verifyOtp(@Body() dto : VerifyOtpDto ) {
+    return this.verificationService.verifyOtp(dto.userId, dto.otpCode);
   }
 }
