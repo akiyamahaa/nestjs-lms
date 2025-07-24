@@ -222,8 +222,9 @@ model QuizAnswer {
 
 enum ChallengeType {
   quiz
-  assignment
-  exam
+  puzzle
+  ordering
+  fillBlank
 }
 
 model Challenge {
@@ -238,6 +239,11 @@ model Challenge {
   updated_at  DateTime         @updatedAt
 
   questions   ChallengeQuestion[]
+
+    // 1-1 relations to each challenge type
+  puzzleChallenge     PuzzleChallenge?     @relation("PuzzleChallengeOnChallenge")
+  orderingChallenge   OrderingChallenge?   @relation("OrderingChallengeOnChallenge")
+  fillBlankChallenge  FillBlankChallenge?  @relation("FillBlankChallengeOnChallenge")
 }
 
 enum ChallengeStatus {
@@ -266,4 +272,57 @@ model ChallengeAnswer {
   is_correct            Boolean           @default(false)
   created_at            DateTime          @default(now())
   updated_at            DateTime          @updatedAt
+}
+
+model PuzzleChallenge {
+  id           String    @id @default(uuid()) @db.Uuid
+  challenge_id String    @unique @db.Uuid
+  challenge    Challenge @relation("PuzzleChallengeOnChallenge", fields: [challenge_id], references: [id])
+
+  instruction  String
+  image        String
+
+  @@map("puzzle_challenges")
+}
+
+model OrderingChallenge {
+  id           String    @id @default(uuid()) @db.Uuid
+  challenge_id String    @unique @db.Uuid
+  challenge    Challenge @relation("OrderingChallengeOnChallenge", fields: [challenge_id], references: [id])
+
+  instruction  String
+  items        OrderingItem[]
+
+  @@map("ordering_challenges")
+}
+
+model OrderingItem {
+  id                String            @id @default(uuid()) @db.Uuid
+  ordering_id       String            @db.Uuid
+  orderingChallenge OrderingChallenge @relation(fields: [ordering_id], references: [id])
+  content           String
+  correct_order     Int
+
+  @@map("ordering_items")
+}
+
+model FillBlankChallenge {
+  id           String    @id @default(uuid()) @db.Uuid
+  challenge_id String    @unique @db.Uuid
+  challenge    Challenge @relation("FillBlankChallengeOnChallenge", fields: [challenge_id], references: [id])
+
+  questions    FillBlankQuestion[]
+
+  @@map("fill_blank_challenges")
+}
+
+model FillBlankQuestion {
+  id           String             @id @default(uuid()) @db.Uuid
+  challenge_id String             @db.Uuid
+  challenge    FillBlankChallenge @relation(fields: [challenge_id], references: [id])
+
+  sentence     String
+  correct_word String
+
+  @@map("fill_blank_questions")
 }

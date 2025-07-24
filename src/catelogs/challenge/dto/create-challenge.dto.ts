@@ -4,8 +4,9 @@ import { Type } from 'class-transformer';
 
 export enum ChallengeType {
   quiz = 'quiz',
-  assignment = 'assignment',
-  exam = 'exam',
+  puzzle = 'puzzle',
+  ordering = 'ordering',
+  fillBlank = 'fillBlank',
 }
 
 export enum ChallengeStatus {
@@ -40,6 +41,26 @@ class CreateChallengeQuestionDto {
   answers: CreateChallengeAnswerDto[];
 }
 
+class PuzzleChallengeDto {
+  @ApiProperty() instruction: string;
+  @ApiProperty() image: string;
+}
+class OrderingItemDto {
+  @ApiProperty() content: string;
+  @ApiProperty() correct_order: number;
+}
+class OrderingChallengeDto {
+  @ApiProperty() instruction: string;
+  @ApiProperty({ type: [OrderingItemDto] }) items: OrderingItemDto[];
+}
+class FillBlankQuestionDto {
+  @ApiProperty() sentence: string;
+  @ApiProperty() correct_word: string;
+}
+class FillBlankChallengeDto {
+  @ApiProperty({ type: [FillBlankQuestionDto] }) questions: FillBlankQuestionDto[];
+}
+
 export class CreateChallengeDto {
   @ApiProperty()
   @IsString()
@@ -68,9 +89,28 @@ export class CreateChallengeDto {
   @IsOptional()
   status?: ChallengeStatus;
 
-  @ApiProperty({ type: [CreateChallengeQuestionDto] })
+  @ApiPropertyOptional({ type: [CreateChallengeQuestionDto] })
   @IsArray()
+  @IsOptional()
   @ValidateNested({ each: true })
   @Type(() => CreateChallengeQuestionDto)
-  questions: CreateChallengeQuestionDto[];
+  questions?: CreateChallengeQuestionDto[];
+
+  @ApiPropertyOptional({ type: PuzzleChallengeDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => PuzzleChallengeDto)
+  puzzle?: PuzzleChallengeDto;
+
+  @ApiPropertyOptional({ type: OrderingChallengeDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => OrderingChallengeDto)
+  ordering?: OrderingChallengeDto;
+
+  @ApiPropertyOptional({ type: FillBlankChallengeDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => FillBlankChallengeDto)
+  fillBlank?: FillBlankChallengeDto;
 }

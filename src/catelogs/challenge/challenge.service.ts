@@ -23,11 +23,6 @@ export class ChallengeService {
       this.prisma.challenge.findMany({
         where,
         orderBy: { order: 'asc' },
-        include: {
-          questions: {
-            include: { answers: true },
-          },
-        },
         skip: (page - 1) * perPage,
         take: perPage,
       }),
@@ -48,9 +43,31 @@ export class ChallengeService {
         questions: {
           include: { answers: true },
         },
+        puzzleChallenge: true,
+        orderingChallenge: {
+          include: { items: true },
+        },
+        fillBlankChallenge: {
+          include: { questions: true },
+        },
       },
     });
     if (!challenge) throw new NotFoundException('Challenge not found');
-    return challenge;
+
+    let detail: any = { ...challenge };
+    if (challenge.type === 'puzzle') {
+      detail = { ...challenge, puzzle: challenge.puzzleChallenge };
+      delete detail.puzzleChallenge;
+    }
+    if (challenge.type === 'erdering') {
+      detail = { ...challenge, ordering: challenge.orderingChallenge };
+      delete detail.orderingChallenge;
+    }
+    if (challenge.type === 'fillBlank') {
+      detail = { ...challenge, fillBlank: challenge.fillBlankChallenge };
+      delete detail.fillBlankChallenge;
+    }
+
+    return detail;
   }
 }
