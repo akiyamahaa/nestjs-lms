@@ -1,6 +1,7 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { ProductsService } from './products.service';
+import { GetUser } from 'src/identities/auth/decorators/get-user.decorator';
 
 @ApiTags('User - Courses')
 @Controller('courses')
@@ -27,7 +28,15 @@ export class ProductsController {
   @ApiParam({ name: 'id', description: 'ID khóa học', type: String })
   @ApiResponse({ status: 200, description: 'Chi tiết khóa học' })
   @Get(':id')
-  async getCourseDetail(@Param('id') id: string) {
-    return this.productsService.findOneForUser(id);
+  async getCourseDetail(@Param('id') id: string, @GetUser('id') userId: string) {
+    return this.productsService.findOneForUser(id, userId);
+  }
+
+  @ApiOperation({ summary: 'Lấy chi tiết bài học (lesson) cho user' })
+  @ApiParam({ name: 'lessonId', description: 'ID bài học', type: String })
+  @ApiResponse({ status: 200, description: 'Chi tiết bài học' })
+  @Get('lesson/:lessonId')
+  async getLessonDetail(@Param('lessonId') lessonId: string) {
+    return this.productsService.findLessonDetailForUser(lessonId);
   }
 }
