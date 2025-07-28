@@ -102,28 +102,6 @@ export class UserController {
   }
 
   /**
-   * Get a user by ID.
-   * @param id - UUID of the user
-   */
-  @Get(':id')
-  @ApiOperation({ summary: 'Get user by ID' })
-  @ApiParam({ name: 'id', type: 'number', description: 'User UUID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns the user',
-    schema: {
-      example: {
-        id: 'uuid',
-        email: 'quanganh@example.com',
-        fullName: 'quanganh',
-      },
-    },
-  })
-  public getUserById(@Param('id') id: string) {
-    return this.userService.findOneById(id);
-  }
-
-  /**
    * Upload avatar for the user.
    * @param userId - ID of the user
    * @param file - Uploaded file
@@ -170,5 +148,47 @@ export class UserController {
     }
     console.log('Uploading avatar for user ID:', userId);
     return await this.userService.uploadAvatar(userId, file);
+  }
+
+  
+  @Get('total-score')
+  @ApiOperation({ summary: 'Get total score of the user' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns the total score of the user',
+    schema: {
+      example: {
+        userId: 'uuid',
+        totalScore: 123.45,
+      },
+    },
+  })
+  async getTotalScore(@GetUser('id') userId: string) {
+    console.log(userId);
+    if (!userId) {
+      throw new ForbiddenException('User ID is required');
+    }
+    const totalScore = await this.userService.getTotalScoreByUserId(userId);
+    return { userId, totalScore };
+  }
+
+  @Get('lesson-stats')
+  @ApiOperation({ summary: 'Get lesson statistics for the user' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns lesson statistics',
+    schema: {
+      example: {
+        totalEnrolledLessons: 20,
+        inProgressLessons: 5,
+        completedLessons: 10,
+      },
+    },
+  })
+  async getLessonStats(@GetUser('id') userId: string) {
+    if (!userId) {
+      throw new ForbiddenException('User ID is required');
+    }
+    return await this.userService.getLessonStats(userId);
   }
 }

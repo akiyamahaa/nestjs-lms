@@ -30,6 +30,7 @@ model User {
   reviews     Review[]
   userLessonProgress UserLessonProgress[]
   challengeScore ChallengeScore[]
+  userLessonScore UserLessonScore[]
 
   @@map("users")
 }
@@ -132,6 +133,7 @@ model Lesson {
 
   question QuizQuestion[]
   userProgress UserLessonProgress[]
+  userLessonScore UserLessonScore[]
 
   @@map("lessons")
 }
@@ -362,4 +364,30 @@ model ChallengeScore {
 
   @@unique([user_id, challenge_id])
   @@map("challenge_scores")
+}
+
+model SystemSetting {
+  id          String   @id @default(uuid()) @db.Uuid
+  key         String   @unique
+  value       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("system_settings")
+}
+
+model UserLessonScore {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  lessonId  String   @db.Uuid
+  score     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id])
+  lesson Lesson @relation(fields: [lessonId], references: [id])
+
+  @@unique([userId, lessonId])
+  @@map("user_lesson_scores")
 }

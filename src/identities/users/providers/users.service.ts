@@ -6,6 +6,8 @@ import { HashingProvider } from 'src/identities/auth/providers/hashing.provider'
 import { User } from 'generated/prisma';
 import { EditUserDto } from '../dto/edit-user.dto';
 import { ChangePasswordDto } from '../dto/change-password.dto';
+import { validate as isUuid } from 'uuid';
+import { BadRequestException } from '@nestjs/common';
 
 @Injectable()
 export class UsersService {
@@ -31,6 +33,9 @@ export class UsersService {
   }
 
   public async findOneById(userId: string): Promise<UserWithoutPassword> {
+    if (!isUuid(userId)) {
+      throw new BadRequestException('Invalid user ID format');
+    }
     const user = await this.prisma.user.findUnique({
       where: {
         id: userId,
@@ -185,5 +190,53 @@ export class UsersService {
     user.avatar = `${baseUrl}/${user.avatar}`;
 
     return user;
+  }
+
+  async getTotalScoreByUserId(userId: string): Promise<number> {
+    const result = await this.prisma.challengeScore.aggregate({
+      where: { user_id: userId },
+      _sum: { score: true },
+    });
+    return result._sum.score || 0;
+  }
+
+  async getLessonStats(userId: string) {
+    // 1. Lấy danh sách product_id user đã đăng ký
+    const enrollments = await this.prisma.enrollment.findMany({
+      where: { user_id: userId },
+      select: { product_id: true },
+    });
+    const productIds = enrollments.map(e => e.product_id);
+
+    // 2. Lấy tất cả lesson thuộc các product đã đăng ký
+    const lessons = await this.prisma.lesson.findMany({
+      where: {
+        module: {
+          course_id: { in: productIds },
+        },
+      },
+      select: { id: true },
+    });
+    const lessonIds = lessons.map(l => l.id);
+
+    // 3. Lấy progress của user với các lesson này
+    const progresses = await this.prisma.userLessonProgress.findMany({
+      where: {
+        user_id: userId,
+        lesson_id: { in: lessonIds },
+      },
+      select: { lesson_id: true, completed_at: true },
+    });
+
+    // 4. Thống kê
+    const total = lessonIds.length;
+    const completed = progresses.filter(p => p.completed_at).length;
+    const inProgress = progresses.filter(p => !p.completed_at).length;
+
+    return {
+      totalEnrolledLessons: total,
+      inProgressLessons: inProgress,
+      completedLessons: completed,
+    };
   }
 }

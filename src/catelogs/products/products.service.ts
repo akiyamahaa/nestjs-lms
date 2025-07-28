@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ProductStatus } from 'generated/prisma';
-import { getFullUrl } from 'src/common/helpers/helper';
+import { getFullUrl, getSettingValue } from 'src/common/helpers/helper';
 
 @Injectable()
 export class ProductsService {
@@ -175,15 +175,40 @@ export class ProductsService {
 
   
   async updateLessonProgress(userId: string, lessonId: string) {
-    // Kiểm tra lesson có tồn tại không
-    const lesson = await this.prisma.lesson.findUnique({ where: { id: lessonId } });
-    if (!lesson) throw new NotFoundException('Lesson not found');
-
-    // Upsert tiến trình học bài
-    return this.prisma.userLessonProgress.upsert({
+    // 1. Update progress
+    await this.prisma.userLessonProgress.upsert({
       where: { user_id_lesson_id: { user_id: userId, lesson_id: lessonId } },
       update: { completed_at: new Date() },
       create: { user_id: userId, lesson_id: lessonId, completed_at: new Date() },
     });
+
+    // 2. Lấy lesson để biết type
+    const lesson = await this.prisma.lesson.findUnique({ where: { id: lessonId } });
+    if (!lesson) throw new NotFoundException('Lesson not found');
+
+    // 3. Lấy điểm từ setting
+    let score = 0;
+    if (lesson.type === 'video') {
+      score = await this.getSettingValue('score_video');
+    } else if (lesson.type === 'content') {
+      score = await this.getSettingValue('score_content');
+    } else {
+      // Nếu là quiz hoặc loại khác thì có thể bỏ qua hoặc xử lý riêng
+      return;
+    }
+
+    // 4. Insert vào UserLessonScore (nếu chưa có thì tạo, nếu có thì update)
+    await this.prisma.userLessonScore.upsert({
+      where: { userId_lessonId: { userId, lessonId } },
+      update: { score },
+      create: { userId, lessonId, score },
+    });
+
+    return { message: 'Lesson progress updated successfully', score };
+  }
+
+  async getSettingValue(key: string): Promise<number> {
+    const setting = await this.prisma.systemSetting.findUnique({ where: { key } });
+    return setting ? Number(setting.value) : 0;
   }
 }
