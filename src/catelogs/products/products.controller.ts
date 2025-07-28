@@ -1,9 +1,11 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { Controller, Get, Param, Query, Post, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { ProductsService } from './products.service';
 import { GetUser } from 'src/identities/auth/decorators/get-user.decorator';
+import { JwtAuthGuard } from 'src/identities/auth/guards/jwt.guard';
 
 @ApiTags('User - Courses')
+@ApiBearerAuth()
 @Controller('courses')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
@@ -36,7 +38,15 @@ export class ProductsController {
   @ApiParam({ name: 'lessonId', description: 'ID bài học', type: String })
   @ApiResponse({ status: 200, description: 'Chi tiết bài học' })
   @Get('lesson/:lessonId')
-  async getLessonDetail(@Param('lessonId') lessonId: string) {
-    return this.productsService.findLessonDetailForUser(lessonId);
+  async getLessonDetail(@Param('lessonId') lessonId: string, @GetUser('id') userId: string) {
+    return this.productsService.findLessonDetailForUser(lessonId, userId);
+  }
+
+  @ApiOperation({ summary: 'Cập nhật user đã học lesson nào' })
+  @ApiParam({ name: 'lessonId', description: 'ID bài học', type: String })
+  @UseGuards(JwtAuthGuard)
+  @Post('lesson/:lessonId/progress')
+  async updateLessonProgress(@GetUser('id') userId: string, @Param('lessonId') lessonId: string) {
+    return this.productsService.updateLessonProgress(userId, lessonId);
   }
 }

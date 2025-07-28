@@ -28,6 +28,8 @@ model User {
 
   enrollments Enrollment[]
   reviews     Review[]
+  userLessonProgress UserLessonProgress[]
+  challengeScore ChallengeScore[]
 
   @@map("users")
 }
@@ -129,6 +131,7 @@ model Lesson {
   deleted_at     DateTime?    @db.Timestamp(6)
 
   question QuizQuestion[]
+  userProgress UserLessonProgress[]
 
   @@map("lessons")
 }
@@ -239,11 +242,14 @@ model Challenge {
   updated_at  DateTime         @updatedAt
 
   questions   ChallengeQuestion[]
+  challengeScore ChallengeScore[]
 
     // 1-1 relations to each challenge type
   puzzleChallenge     PuzzleChallenge?     @relation("PuzzleChallengeOnChallenge")
   orderingChallenge   OrderingChallenge?   @relation("OrderingChallengeOnChallenge")
   fillBlankChallenge  FillBlankChallenge?  @relation("FillBlankChallengeOnChallenge")
+
+  @@map("challenge")
 }
 
 enum ChallengeStatus {
@@ -262,6 +268,8 @@ model ChallengeQuestion {
   updated_at   DateTime         @updatedAt
 
   answers      ChallengeAnswer[]
+
+  @@map("challenge_question")
 }
 
 model ChallengeAnswer {
@@ -272,6 +280,8 @@ model ChallengeAnswer {
   is_correct            Boolean           @default(false)
   created_at            DateTime          @default(now())
   updated_at            DateTime          @updatedAt
+
+  @@map("challenge_answer")
 }
 
 model PuzzleChallenge {
@@ -325,4 +335,31 @@ model FillBlankQuestion {
   correct_word String
 
   @@map("fill_blank_questions")
+}
+
+model UserLessonProgress {
+  id           String   @id @default(uuid()) @db.Uuid
+  user_id      String   @db.Uuid
+  lesson_id    String   @db.Uuid
+  completed_at DateTime?
+
+  user   User   @relation(fields: [user_id], references: [id])
+  lesson Lesson @relation(fields: [lesson_id], references: [id])
+
+  @@unique([user_id, lesson_id])
+  @@map("user_lesson_progress")
+}
+
+model ChallengeScore {
+  id           String   @id @default(uuid()) @db.Uuid
+  user_id      String   @db.Uuid
+  challenge_id String   @db.Uuid
+  score        Float
+  submitted_at DateTime @default(now())
+
+  user      User      @relation(fields: [user_id], references: [id])
+  challenge Challenge @relation(fields: [challenge_id], references: [id])
+
+  @@unique([user_id, challenge_id])
+  @@map("challenge_scores")
 }
