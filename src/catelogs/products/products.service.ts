@@ -1,18 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ProductStatus } from 'generated/prisma';
+import { getFullUrl } from 'src/common/helpers/helper';
 
 @Injectable()
 export class ProductsService {
   constructor(private prisma: PrismaService) {}
 
-  private getFullUrl(path: string) {
-    const baseUrl = process.env.BASE_URL || 'http://localhost:5005';
-    if (!path) return null;
-    // Nếu path đã là url tuyệt đối thì giữ nguyên
-    if (/^https?:\/\//.test(path)) return path;
-    return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\/+/, '')}`;
-  }
 
   async findAllForUser(filter: { category_id?: string; search?: string, page?: number, perPage?: number }) {
     const page = filter.page && filter.page > 0 ? Number(filter.page) : 1;
@@ -69,7 +63,7 @@ export class ProductsService {
 
       return {
         ...rest,
-        thumbnail: this.getFullUrl(p.thumbnail),
+        thumbnail: getFullUrl(p.thumbnail),
         reviewCount,
         averageRating: Number(averageRating.toFixed(1)),
         enrollmentCount,
@@ -133,7 +127,7 @@ export class ProductsService {
       ...mod,
       lessons: mod.lessons?.map((lesson: any) => ({
         ...lesson,
-        thumbnail: this.getFullUrl(lesson.thumbnail),
+        thumbnail: getFullUrl(lesson.thumbnail),
       })) ?? [],
     })) ?? [];
 
@@ -141,7 +135,7 @@ export class ProductsService {
 
     return {
       ...rest,
-      thumbnail: this.getFullUrl(product.thumbnail),
+      thumbnail: getFullUrl(product.thumbnail),
       reviews,
       reviewCount,
       averageRating: Number(averageRating.toFixed(1)),
@@ -153,7 +147,7 @@ export class ProductsService {
     };
   }
 
-  async findLessonDetailForUser(lessonId: string) {
+  async findLessonDetailForUser(lessonId: string, userId?: string) {
     const lesson = await this.prisma.lesson.findUnique({
       where: { id: lessonId, status: 'published' },
       include: {
@@ -164,6 +158,32 @@ export class ProductsService {
     if (!lesson || lesson.deleted_at || lesson.status !== 'published') {
       throw new NotFoundException('Lesson not found');
     }
-    return lesson;
+
+    let isLearned = false;
+    if (userId) {
+      const progress = await this.prisma.userLessonProgress.findUnique({
+        where: { user_id_lesson_id: { user_id: userId, lesson_id: lessonId } },
+      });
+      isLearned = !!progress;
+    }
+
+    return {
+      ...lesson,
+      isLearned,
+    };
+  }
+
+  
+  async updateLessonProgress(userId: string, lessonId: string) {
+    // Kiểm tra lesson có tồn tại không
+    const lesson = await this.prisma.lesson.findUnique({ where: { id: lessonId } });
+    if (!lesson) throw new NotFoundException('Lesson not found');
+
+    // Upsert tiến trình học bài
+    return this.prisma.userLessonProgress.upsert({
+      where: { user_id_lesson_id: { user_id: userId, lesson_id: lessonId } },
+      update: { completed_at: new Date() },
+      create: { user_id: userId, lesson_id: lessonId, completed_at: new Date() },
+    });
   }
 }

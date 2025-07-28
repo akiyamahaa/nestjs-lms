@@ -36,7 +36,7 @@ export class ChallengeService {
     };
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, userId?: string) {
     const challenge = await this.prisma.challenge.findFirst({
       where: { id, status: 'published' },
       include: {
@@ -59,7 +59,7 @@ export class ChallengeService {
       detail = { ...challenge, puzzle: challenge.puzzleChallenge };
       delete detail.puzzleChallenge;
     }
-    if (challenge.type === 'erdering') {
+    if (challenge.type === 'ordering') {
       detail = { ...challenge, ordering: challenge.orderingChallenge };
       delete detail.orderingChallenge;
     }
@@ -68,6 +68,27 @@ export class ChallengeService {
       delete detail.fillBlankChallenge;
     }
 
-    return detail;
+    let userScore: number | null = null;
+    if (userId) {
+      const score = await this.prisma.challengeScore.findUnique({
+        where: { user_id_challenge_id: { user_id: userId, challenge_id: id } },
+      });
+      userScore = score?.score ?? null;
+    }
+
+    return { ...detail, userScore };
+  }
+
+  async updateChallengeProgress(userId: string, challengeId: string, score: number) {
+    // Kiểm tra challenge có tồn tại không
+    const challenge = await this.prisma.challenge.findUnique({ where: { id: challengeId } });
+    if (!challenge) throw new NotFoundException('Challenge not found');
+
+    // Upsert điểm và trạng thái làm bài
+    return this.prisma.challengeScore.upsert({
+      where: { user_id_challenge_id: { user_id: userId, challenge_id: challengeId } },
+      update: { score, submitted_at: new Date() },
+      create: { user_id: userId, challenge_id: challengeId, score, submitted_at: new Date() },
+    });
   }
 }
