@@ -31,6 +31,7 @@ model User {
   userLessonProgress UserLessonProgress[]
   challengeScore ChallengeScore[]
   userLessonScore UserLessonScore[]
+  userCourseProgress UserCourseProgress[]
 
   @@map("users")
 }
@@ -94,6 +95,7 @@ model Product {
   modules Module[]
   enrollments Enrollment[]
   reviews Review[]
+  userCourseProgress UserCourseProgress[]
 
   @@unique([label, slug])
   @@map("products")
@@ -390,4 +392,17 @@ model UserLessonScore {
 
   @@unique([userId, lessonId])
   @@map("user_lesson_scores")
+}
+
+model UserCourseProgress {
+  id           String   @id @default(uuid()) @db.Uuid
+  user_id      String   @db.Uuid
+  product_id   String   @db.Uuid
+  completed_at DateTime?
+
+  user   User    @relation(fields: [user_id], references: [id])
+  course Product @relation(fields: [product_id], references: [id])
+
+  @@unique([user_id, product_id])
+  @@map("user_course_progress")
 }

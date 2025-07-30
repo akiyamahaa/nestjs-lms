@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { getFullUrl } from 'src/common/helpers/helper';
 
 @Injectable()
 export class ChallengeService {
@@ -40,23 +41,20 @@ export class ChallengeService {
     const challenge = await this.prisma.challenge.findFirst({
       where: { id, status: 'published' },
       include: {
-        questions: {
-          include: { answers: true },
-        },
+        questions: { include: { answers: true } },
         puzzleChallenge: true,
-        orderingChallenge: {
-          include: { items: true },
-        },
-        fillBlankChallenge: {
-          include: { questions: true },
-        },
+        orderingChallenge: { include: { items: true } },
+        fillBlankChallenge: { include: { questions: true } },
       },
     });
     if (!challenge) throw new NotFoundException('Challenge not found');
 
     let detail: any = { ...challenge };
     if (challenge.type === 'puzzle') {
-      detail = { ...challenge, puzzle: challenge.puzzleChallenge };
+      const puzzle = challenge.puzzleChallenge
+        ? { ...challenge.puzzleChallenge, image: getFullUrl(challenge.puzzleChallenge.image) }
+        : null;
+      detail = { ...challenge, puzzle };
       delete detail.puzzleChallenge;
     }
     if (challenge.type === 'ordering') {
