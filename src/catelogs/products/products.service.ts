@@ -8,37 +8,80 @@ export class ProductsService {
   constructor(private prisma: PrismaService) {}
 
 
-  async findAllForUser(filter: { category_id?: string; search?: string; page?: number; perPage?: number; sort?: string }) {
+async findAllForUser(filter: { category_id?: string; search?: string, page?: number, perPage?: number, sort?: string }) {
     const page = filter.page && filter.page > 0 ? Number(filter.page) : 1;
     const perPage = filter.perPage && filter.perPage > 0 ? Number(filter.perPage) : 10;
     const where: any = {
       deleted_at: null,
       status: ProductStatus.published,
     };
-    if (filter.category_id) where.category_id = filter.category_id;
-    if (filter.search) where.title = { contains: filter.search, mode: 'insensitive' };
+
+    if (filter.category_id) {
+      where.category_id = filter.category_id;
+    }
+
+    if (filter.search) {
+      where.title = { contains: filter.search, mode: 'insensitive' };
+    }
 
     let orderBy: any = { created_at: 'desc' }; // mặc định mới nhất
     if (filter.sort === 'popular') {
       orderBy = { enrollments: { _count: 'desc' } }; // phổ biến nhất
     }
 
-    const [courses, total] = await Promise.all([
+    const [total, products] = await Promise.all([
+      this.prisma.product.count({ where }),
       this.prisma.product.findMany({
         where,
         orderBy,
+        include: { 
+          reviews: true,
+          enrollments: true,
+          modules: {
+            include: {
+              lessons: true,
+            }
+          }
+        },
         skip: (page - 1) * perPage,
         take: perPage,
-        include: { enrollments: true },
       }),
-      this.prisma.product.count({ where }),
     ]);
 
+    const data = products.map((p: any) => {
+      const reviews = p.reviews || [];
+      const reviewCount = reviews.length;
+      const averageRating = reviewCount
+        ? reviews.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) / reviewCount
+        : 0;
+
+      // Đếm số người đã enroll
+      const enrollmentCount = p.enrollments ? p.enrollments.length : 0;
+
+      // Đếm tổng số bài học
+      const lessonCount = p.modules
+        ? p.modules.reduce((sum: number, m: any) => sum + (m.lessons ? m.lessons.length : 0), 0)
+        : 0;
+
+      // Loại bỏ trường reviews, enrollments, modules khỏi kết quả trả về nếu muốn
+      const { reviews: _r, enrollments: _e, modules: _m, ...rest } = p;
+
+      return {
+        ...rest,
+        thumbnail: getFullUrl(p.thumbnail),
+        reviewCount,
+        averageRating: Number(averageRating.toFixed(1)),
+        enrollmentCount,
+        lessonCount,
+      };
+    });
+
     return {
-      data: courses,
+      data,
       total,
       page,
       perPage,
+      totalPages: Math.ceil(total / perPage),
     };
   }
 
