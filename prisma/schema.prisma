@@ -24,8 +24,10 @@ model User {
   avatar     String?
   isVerified Boolean  @default(false)
   role       String   @default("user")
-  otps       OTP[]
+  age        Int?
+  grade      Grade?
 
+  otps       OTP[]
   enrollments Enrollment[]
   reviews     Review[]
   userLessonProgress UserLessonProgress[]
@@ -405,4 +407,19 @@ model UserCourseProgress {
 
   @@unique([user_id, product_id])
   @@map("user_course_progress")
+}
+
+enum Grade {
+  G1
+  G2
+  G3
+  G4
+  G5
+  G6
+  G7
+  G8
+  G9
+  G10
+  G11
+  G12
 }

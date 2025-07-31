@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsNumber, IsString, MinLength } from 'class-validator';
+import { Grade } from 'generated/prisma';
 
 export class SignUpDto {
   @ApiProperty({
@@ -19,7 +20,17 @@ export class SignUpDto {
   password: string;
 
   @IsString()
-  @IsNotEmpty() // Make fullName required
+  @IsNotEmpty() 
   @ApiProperty()
-  fullName: string; // Remove the "?" to make it required
+  fullName: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  @ApiProperty()
+  age?: number;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({ enum: Grade, enumName: 'grade' })
+  grade?: Grade;
 }
