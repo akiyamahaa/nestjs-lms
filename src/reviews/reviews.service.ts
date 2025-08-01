@@ -67,14 +67,20 @@ async createReview(userId: string, productId: string, rating: number, comment?: 
     }));
   }
 
-//   async updateProductRating(productId: string) {
-//     const reviews = await this.prisma.review.findMany({ where: { product_id: productId } });
-//     const rating_avg = reviews.length
-//       ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-//       : 0;
-//     await this.prisma.product.update({
-//       where: { id: productId },
-//       data: { rating_avg, rating_cnt: reviews.length },
-//     });
-//   }
+  async getUserReviews(userId: string) {
+    return this.prisma.review.findMany({
+      where: { user_id: userId },
+      include: { 
+        product: {
+          select: {
+            id: true,
+            title: true,
+            thumbnail: true,
+          }
+        }
+      },
+      orderBy: { created_at: 'desc' },
+    });
+  }
+
 }

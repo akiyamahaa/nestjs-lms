@@ -39,4 +39,10 @@ export class ReviewsController {
     // Không yêu cầu đăng nhập, không có guard
     return this.reviewsService.getFiveStarLatest(limit ? Number(limit) : 10);
   }
+
+  @ApiOperation({ summary: 'Lấy danh sách đánh giá của user hiện tại' })
+  @Get('my-reviews')
+  async getUserReviews(@GetUser('id') userId: string) {
+    return this.reviewsService.getUserReviews(userId);
+  }
 }
