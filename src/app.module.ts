@@ -13,6 +13,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { EnrollmentsModule } from './enrollments/enrollments.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { ChallengeModule } from './catelogs/challenge/challenge.module';
+import { ScoresModule } from './scores/scores.module';
 
 @Module({
   imports: [
@@ -29,7 +30,8 @@ import { ChallengeModule } from './catelogs/challenge/challenge.module';
     CloudinaryModule,
     EnrollmentsModule,
     ReviewsModule,
-    ChallengeModule
+    ChallengeModule,
+    ScoresModule
   ],
   controllers: [AppController],
   providers: [AppService],

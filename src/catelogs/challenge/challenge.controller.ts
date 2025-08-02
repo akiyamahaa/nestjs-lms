@@ -3,7 +3,8 @@ import { ApiTags, ApiOperation, ApiQuery, ApiResponse, ApiParam, ApiBearerAuth, 
 import { ChallengeService } from './challenge.service';
 import { JwtAuthGuard } from 'src/identities/auth/guards/jwt.guard';
 import { GetUser } from 'src/identities/auth/decorators/get-user.decorator';
-import { string } from 'joi';
+import { SubmitChallengeDto } from './dto/submit-challenge.dto';
+import { SubmitChallengeResponseDto } from './dto/submit-challenge-response.dto';
 
 export const Public = () => SetMetadata('isPublic', true);
 
@@ -70,5 +71,77 @@ export class ChallengeController {
     @GetUser('id') userId: string
   ) {
     return this.challengeService.updateChallengeProgress(userId, challengeId, score);
+  }
+
+  @ApiOperation({ summary: 'Submit challenge và tính điểm tự động' })
+  @ApiParam({ name: 'id', description: 'ID challenge', type: String })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Submit challenge thành công',
+    type: SubmitChallengeResponseDto
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Dữ liệu không hợp lệ hoặc challenge type không được hỗ trợ',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Challenge không tồn tại',
+  })
+  @ApiBearerAuth()
+  @Post(':id/submit')
+  @ApiBody({
+    type: SubmitChallengeDto,
+    examples: {
+      quiz: {
+        summary: 'Submit Quiz Challenge',
+        value: {
+          quiz: {
+            answers: [
+              { questionId: 'question-uuid-1', answerId: 'answer-uuid-1' },
+              { questionId: 'question-uuid-2', answerId: 'answer-uuid-2' }
+            ]
+          }
+        }
+      },
+      puzzle: {
+        summary: 'Submit Puzzle Challenge',
+        value: {
+          puzzle: {
+            score: 85
+          }
+        }
+      },
+      ordering: {
+        summary: 'Submit Ordering Challenge',
+        value: {
+          ordering: {
+            items: [
+              { itemId: 'item-uuid-1', position: 1 },
+              { itemId: 'item-uuid-2', position: 2 },
+              { itemId: 'item-uuid-3', position: 3 }
+            ]
+          }
+        }
+      },
+      fillBlank: {
+        summary: 'Submit Fill Blank Challenge',
+        value: {
+          fillBlank: {
+            answers: [
+              { questionId: 'question-uuid-1', answer: 'correct word' },
+              { questionId: 'question-uuid-2', answer: 'another word' }
+            ]
+          }
+        }
+      }
+    }
+  })
+  async submitChallenge(
+    @Param('id') challengeId: string,
+    @Body() submitData: SubmitChallengeDto,
+    @GetUser('id') userId: string
+  ) {
+    return this.challengeService.submitChallenge(userId, challengeId, submitData);
   }
 }

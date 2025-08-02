@@ -1,9 +1,8 @@
-import { Controller, Post, Get, Param, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
+import { Controller, Post, Get, Param, UseGuards, Query } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiParam, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { EnrollmentsService } from './enrollments.service';
 import { JwtAuthGuard } from 'src/identities/auth/guards/jwt.guard';
 import { GetUser } from 'src/identities/auth/decorators/get-user.decorator';
-import { AuthGuard } from '@nestjs/passport/dist/auth.guard';
 
 @ApiTags('Enrollments')
 @UseGuards(JwtAuthGuard)
@@ -20,8 +19,17 @@ export class EnrollmentsController {
   }
 
   @ApiOperation({ summary: 'Lấy danh sách khóa học đã đăng ký' })
+  @ApiQuery({ 
+    name: 'status', 
+    required: false, 
+    description: 'Lọc theo trạng thái: all (tất cả), learning (đang học), completed (đã hoàn thành)',
+    enum: ['all', 'learning', 'completed']
+  })
   @Get('my')
-  async getMyEnrollments(@GetUser('id') userId: string) {
-    return this.enrollmentsService.getMyEnrollments(userId);
+  async getMyEnrollments(
+    @GetUser('id') userId: string,
+    @Query('status') status?: string
+  ) {
+    return this.enrollmentsService.getMyEnrollments(userId, status);
   }
 }
