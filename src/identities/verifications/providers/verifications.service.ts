@@ -38,11 +38,6 @@ export class VerificationsService {
 
     if (!otp) throw new ForbiddenException('Invalid or expired OTP');
 
-    await this.prisma.oTP.update({
-      where: { id: otp.id },
-      data: { isUsed: true },
-    });
-
     return { message: 'OTP verified successfully' };
   }
 }

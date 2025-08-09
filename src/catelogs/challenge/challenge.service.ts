@@ -29,8 +29,26 @@ export class ChallengeService {
         take: perPage,
       }),
     ]);
+
+    // Lấy điểm cao nhất cho từng challenge
+    const challengeIds = data.map(challenge => challenge.id);
+    const maxScores = await this.prisma.challengeScore.groupBy({
+      by: ['challenge_id'],
+      where: { challenge_id: { in: challengeIds } },
+      _max: { score: true },
+    });
+
+    // Map điểm cao nhất vào data
+    const dataWithMaxScore = data.map(challenge => {
+      const maxScoreData = maxScores.find(ms => ms.challenge_id === challenge.id);
+      return {
+        ...challenge,
+        maxScore: maxScoreData?._max.score || 0,
+      };
+    });
+
     return {
-      data,
+      data: dataWithMaxScore,
       total,
       page,
       perPage,
@@ -75,7 +93,14 @@ export class ChallengeService {
       userScore = score?.score ?? null;
     }
 
-    return { ...detail, userScore };
+    // Lấy điểm cao nhất của challenge này
+    const maxScoreData = await this.prisma.challengeScore.aggregate({
+      where: { challenge_id: id },
+      _max: { score: true },
+    });
+    const maxScore = maxScoreData._max.score || 0;
+
+    return { ...detail, userScore, maxScore };
   }
 
   async updateChallengeProgress(userId: string, challengeId: string, score: number) {
