@@ -85,12 +85,12 @@ export class AuthService {
       throw new UnauthorizedException('Wrong email or password');
     }
 
-    if (!user.isVerified) {
-      await this.handleUnverifiedUser(user);
-      throw new UnauthorizedException(
-        'Account not verified. A new OTP has been sent to your email.',
-      );
-    }
+    // if (!user.isVerified) {
+    //   await this.handleUnverifiedUser(user);
+    //   throw new UnauthorizedException(
+    //     'Account not verified. A new OTP has been sent to your email.',
+    //   );
+    // }
 
     //   Send confirmation
     return this.signToken(user.id, user.email, user.role);

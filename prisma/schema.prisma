@@ -242,7 +242,7 @@ model Challenge {
   slug        String           @unique @db.VarChar(255)
   description String?
   type        ChallengeType
-  order       Int              @default(0)
+order       Int              @default(0)
   status      ChallengeStatus  @default(draft)
   created_at  DateTime         @default(now())
   updated_at  DateTime         @updatedAt
@@ -318,6 +318,7 @@ model OrderingItem {
   orderingChallenge OrderingChallenge @relation(fields: [ordering_id], references: [id])
   content           String
   correct_order     Int
+  explanation       String?
 
   @@map("ordering_items")
 }

@@ -129,15 +129,55 @@ async findAllForUser(filter: { category_id?: string; search?: string, page?: num
     let quizLessonCount = 0;
     let lectureLessonCount = 0;
     let totalLessonCount = 0;
+    const quizLessonIds: string[] = [];
     if (product.modules) {
       for (const mod of product.modules) {
         if (mod.lessons) {
           for (const lesson of mod.lessons) {
             totalLessonCount++;
-            if (lesson.type === 'quiz') quizLessonCount++;
+            if (lesson.type === 'quiz') {
+              quizLessonCount++;
+              quizLessonIds.push(lesson.id);
+            }
             if (lesson.type === 'video' || lesson.type === 'content') lectureLessonCount++;
           }
         }
+      }
+    }
+
+    // Lấy điểm cao nhất cho từng quiz lesson
+    let maxScoresData: { lessonId: string; _max: { score: number | null } }[] = [];
+    if (quizLessonIds.length > 0) {
+      maxScoresData = await this.prisma.userLessonScore.groupBy({
+        by: ['lessonId'],
+        where: { lessonId: { in: quizLessonIds } },
+        _max: { score: true },
+      }) as any;
+    }
+
+    // Lấy thông tin lesson đã học của user hiện tại
+    let userLessonProgress: any[] = [];
+    if (userId) {
+      const allLessonIds: string[] = [];
+      if (product.modules) {
+        for (const mod of product.modules) {
+          if (mod.lessons) {
+            for (const lesson of mod.lessons) {
+              allLessonIds.push(lesson.id);
+            }
+          }
+        }
+      }
+      
+      if (allLessonIds.length > 0) {
+        userLessonProgress = await this.prisma.userLessonProgress.findMany({
+          where: { 
+            user_id: userId, 
+            lesson_id: { in: allLessonIds },
+            completed_at: { not: null }
+          },
+          select: { lesson_id: true }
+        });
       }
     }
 
@@ -159,10 +199,24 @@ async findAllForUser(filter: { category_id?: string; search?: string, page?: num
 
     const modules = product.modules?.map((mod: any) => ({
       ...mod,
-      lessons: mod.lessons?.map((lesson: any) => ({
-        ...lesson,
-        thumbnail: getFullUrl(lesson.thumbnail),
-      })) ?? [],
+      lessons: mod.lessons?.map((lesson: any) => {
+        let maxScore = 0;
+        // Nếu là quiz lesson, tìm điểm cao nhất
+        if (lesson.type === 'quiz') {
+          const lessonMaxScore = maxScoresData.find(ms => ms.lessonId === lesson.id);
+          maxScore = lessonMaxScore?._max.score || 0;
+        }
+        
+        // Kiểm tra lesson đã học chưa
+        const isLearned = userLessonProgress.some(progress => progress.lesson_id === lesson.id);
+        
+        return {
+          ...lesson,
+          thumbnail: getFullUrl(lesson.thumbnail),
+          maxScore,
+          isLearned,
+        };
+      }) ?? [],
     })) ?? [];
 
     const { reviews: _removed, enrollments: _e, modules: _m, ...rest } = product;

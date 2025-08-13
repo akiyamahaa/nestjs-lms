@@ -45,7 +45,7 @@ export class UsersService {
       throw new ForbiddenException('User not found');
     }
     const baseUrl = process.env.BASE_URL;
-    user.avatar = `${baseUrl}/${user.avatar}`;
+    user.avatar = user.avatar ? `${baseUrl}/${user.avatar}` : null;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...userWithoutPassword } = user;
 
