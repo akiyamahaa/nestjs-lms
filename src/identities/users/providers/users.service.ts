@@ -201,42 +201,62 @@ export class UsersService {
   }
 
   async getLessonStats(userId: string) {
-    // 1. Lấy danh sách product_id user đã đăng ký
+    // 1. Lấy tất cả khóa học đã đăng ký
     const enrollments = await this.prisma.enrollment.findMany({
       where: { user_id: userId },
       select: { product_id: true },
     });
-    const productIds = enrollments.map(e => e.product_id);
+    const enrolledCourseIds = enrollments.map(e => e.product_id);
+    const totalEnrolledCourses = enrolledCourseIds.length;
 
-    // 2. Lấy tất cả lesson thuộc các product đã đăng ký
-    const lessons = await this.prisma.lesson.findMany({
-      where: {
-        module: {
-          course_id: { in: productIds },
-        },
-      },
-      select: { id: true },
-    });
-    const lessonIds = lessons.map(l => l.id);
-
-    // 3. Lấy progress của user với các lesson này
-    const progresses = await this.prisma.userLessonProgress.findMany({
+    // 2. Lấy khóa học đã hoàn thành
+    const completedCourses = await this.prisma.userCourseProgress.findMany({
       where: {
         user_id: userId,
-        lesson_id: { in: lessonIds },
+        product_id: { in: enrolledCourseIds },
+        completed_at: { not: null },
       },
-      select: { lesson_id: true, completed_at: true },
+      select: { product_id: true },
     });
+    const totalCompletedCourses = completedCourses.length;
 
-    // 4. Thống kê
-    const total = lessonIds.length;
-    const completed = progresses.filter(p => p.completed_at).length;
-    const inProgress = progresses.filter(p => !p.completed_at).length;
+    // 3. Khóa học đang học = đã đăng ký - đã hoàn thành
+    const totalInProgressCourses = totalEnrolledCourses - totalCompletedCourses;
 
     return {
-      totalEnrolledLessons: total,
-      inProgressLessons: inProgress,
-      completedLessons: completed,
+      totalEnrolledLessons: totalEnrolledCourses,
+      inProgressLessons: totalInProgressCourses,
+      completedLessons: totalCompletedCourses,
+    };
+  }
+
+  async getCourseStats(userId: string) {
+    // 1. Lấy tất cả khóa học đã đăng ký
+    const enrollments = await this.prisma.enrollment.findMany({
+      where: { user_id: userId },
+      select: { product_id: true },
+    });
+    const enrolledCourseIds = enrollments.map(e => e.product_id);
+    const totalEnrolledCourses = enrolledCourseIds.length;
+
+    // 2. Lấy khóa học đã hoàn thành
+    const completedCourses = await this.prisma.userCourseProgress.findMany({
+      where: {
+        user_id: userId,
+        product_id: { in: enrolledCourseIds },
+        completed_at: { not: null },
+      },
+      select: { product_id: true },
+    });
+    const totalCompletedCourses = completedCourses.length;
+
+    // 3. Khóa học đang học = đã đăng ký - đã hoàn thành
+    const totalInProgressCourses = totalEnrolledCourses - totalCompletedCourses;
+
+    return {
+      totalEnrolledCourses,
+      inProgressCourses: totalInProgressCourses,
+      completedCourses: totalCompletedCourses,
     };
   }
 }

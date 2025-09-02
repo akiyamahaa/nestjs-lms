@@ -194,7 +194,7 @@ export class ChallengeService {
       });
     }
 
-    const score = questions.length > 0 ? (correctAnswers / questions.length) * 100 : 0;
+    const score = correctAnswers;
 
     return {
       score,
@@ -251,7 +251,7 @@ export class ChallengeService {
       });
     }
 
-    const score = correctItems.length > 0 ? (correctAnswers / correctItems.length) * 100 : 0;
+    const score = correctAnswers;
 
     return {
       score,
@@ -294,7 +294,7 @@ export class ChallengeService {
       });
     }
 
-    const score = questions.length > 0 ? (correctAnswers / questions.length) * 100 : 0;
+    const score = correctAnswers;
 
     return {
       score,

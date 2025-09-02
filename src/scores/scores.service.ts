@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { getFullUrl } from '../common/helpers/helper';
 
 @Injectable()
 export class ScoresService {
@@ -93,7 +94,14 @@ export class ScoresService {
     query += ` ORDER BY total_score DESC LIMIT ${limit}`;
 
     const leaderboard = await this.prisma.$queryRawUnsafe(query);
-    return leaderboard;
+    
+    // Convert avatar paths to full URLs
+    const leaderboardWithFullUrls = (leaderboard as any[]).map(user => ({
+      ...user,
+      avatar: user.avatar ? getFullUrl(user.avatar) : null
+    }));
+    
+    return leaderboardWithFullUrls;
   }
 
   /**
