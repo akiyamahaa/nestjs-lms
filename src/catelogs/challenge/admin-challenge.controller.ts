@@ -20,7 +20,7 @@ export class AdminChallengeController {
   @ApiQuery({ name: 'type', required: false, description: 'Lọc theo type' })
   @ApiQuery({ name: 'page', required: false, description: 'Trang' })
   @ApiQuery({ name: 'perPage', required: false, description: 'Số lượng mỗi trang' })
-  @Get()
+  @Get('index')
   findAll(
     @Query('search') search?: string,
     @Query('status') status?: string,

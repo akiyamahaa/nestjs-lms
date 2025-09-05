@@ -18,7 +18,7 @@ import { storage } from 'src/cloudinary/cloudinary.storage';
 import { validateOrReject } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
 
-@ApiTags('Products')
+@ApiTags('Admin Products')
 @Controller('products')
 export class AdminProductsController {
   constructor(private readonly productsService: AdminProductsService) { }

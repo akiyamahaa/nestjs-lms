@@ -32,7 +32,7 @@ export class AdminCategoriesController {
 
   @ApiOperation({ summary: 'Lấy tất cả danh mục' })
   @ApiResponse({ status: 200, description: 'Danh sách danh mục' })
-  @Get()
+  @Get('index')
   findAll() {
     return this.adminCategoriesService.findAll();
   }
