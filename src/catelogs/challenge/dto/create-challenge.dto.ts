@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsEnum, ValidateNested, IsArray, IsInt } from 'class-validator';
+import { IsString, IsOptional, IsEnum, ValidateNested, IsArray, IsInt, IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export enum ChallengeType {
@@ -21,6 +21,7 @@ class CreateChallengeAnswerDto {
   answer: string;
 
   @ApiProperty()
+  @IsBoolean()
   is_correct: boolean;
 }
 
@@ -42,23 +43,53 @@ class CreateChallengeQuestionDto {
 }
 
 class PuzzleChallengeDto {
-  @ApiProperty() instruction: string;
-  @ApiProperty() image: string;
+  @ApiProperty()
+  @IsString()
+  instruction: string;
+  
+  @ApiProperty()
+  @IsString()
+  image: string;
 }
+
 class OrderingItemDto {
-  @ApiProperty() content: string;
-  @ApiProperty() correct_order: number;
+  @ApiProperty()
+  @IsString()
+  content: string;
+  
+  @ApiProperty()
+  @IsInt()
+  correct_order: number;
 }
+
 class OrderingChallengeDto {
-  @ApiProperty() instruction: string;
-  @ApiProperty({ type: [OrderingItemDto] }) items: OrderingItemDto[];
+  @ApiProperty()
+  @IsString()
+  instruction: string;
+  
+  @ApiProperty({ type: [OrderingItemDto] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => OrderingItemDto)
+  items: OrderingItemDto[];
 }
+
 class FillBlankQuestionDto {
-  @ApiProperty() sentence: string;
-  @ApiProperty() correct_word: string;
+  @ApiProperty()
+  @IsString()
+  sentence: string;
+  
+  @ApiProperty()
+  @IsString()
+  correct_word: string;
 }
+
 class FillBlankChallengeDto {
-  @ApiProperty({ type: [FillBlankQuestionDto] }) questions: FillBlankQuestionDto[];
+  @ApiProperty({ type: [FillBlankQuestionDto] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => FillBlankQuestionDto)
+  questions: FillBlankQuestionDto[];
 }
 
 export class CreateChallengeDto {
@@ -66,9 +97,10 @@ export class CreateChallengeDto {
   @IsString()
   title: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'URL slug - tự động tạo từ title nếu không có' })
   @IsString()
-  slug: string;
+  @IsOptional()
+  slug?: string;
 
   @ApiPropertyOptional()
   @IsString()
