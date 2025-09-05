@@ -7,10 +7,11 @@ export class CreateCategoryDto {
   @MaxLength(150)
   title: string;
 
-  @ApiProperty({ description: 'Đường dẫn thân thiện (URL)', maxLength: 150 })
+  @ApiPropertyOptional({ description: 'Đường dẫn thân thiện (URL) - tự động tạo nếu không có', maxLength: 150 })
+  @IsOptional()
   @IsString()
   @MaxLength(150)
-  slug: string;
+  slug?: string;
 
   @ApiProperty({ description: 'Mô tả ngắn cho danh mục' })
   @IsString()
