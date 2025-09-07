@@ -3,6 +3,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateChallengeDto } from './dto/create-challenge.dto';
 import { UpdateChallengeDto } from './dto/update-challenge.dto';
 import { ChallengeStatus, ChallengeType } from './dto/create-challenge.dto';
+import { UserScoresQueryDto } from './dto/user-scores-query.dto';
 
 @Injectable()
 export class AdminChallengeService {
@@ -561,5 +562,99 @@ export class AdminChallengeService {
       slug = `${baseSlug}-${counter}`;
       counter++;
     }
+  }
+
+  async getUserScores(query: UserScoresQueryDto) {
+    const { page = 1, limit = 10, search } = query;
+    const skip = (page - 1) * limit;
+
+    // Build where condition for users
+    const where = {
+      ...(search && {
+        OR: [
+          { fullName: { contains: search, mode: 'insensitive' as any } },
+          { email: { contains: search, mode: 'insensitive' as any } }
+        ]
+      })
+    };
+
+    // Get users with their scores
+    const users = await this.prisma.user.findMany({
+      where,
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        avatar: true,
+        createdAt: true,
+        challengeScore: {
+          include: {
+            challenge: {
+              select: {
+                type: true
+              }
+            }
+          }
+        },
+        userLessonScore: true
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    // Calculate scores for each user
+    const usersWithScores = users.map(user => {
+      // Challenge scores by type
+      const challengeScores = { quiz: 0, puzzle: 0, ordering: 0, fillBlank: 0, total: 0 };
+      
+      user.challengeScore.forEach(score => {
+        const type = score.challenge.type;
+        challengeScores[type] += score.score;
+        challengeScores.total += score.score;
+      });
+
+      // Lesson scores
+      const lessonScore = user.userLessonScore.reduce((sum, score) => sum + score.score, 0);
+
+      // Total score
+      const totalScore = challengeScores.total + lessonScore;
+
+      return {
+        id: user.id,
+        name: user.fullName,
+        email: user.email,
+        avatar: user.avatar,
+        scores: {
+          quiz: challengeScores.quiz,
+          puzzle: challengeScores.puzzle,
+          ordering: challengeScores.ordering,
+          fillBlank: challengeScores.fillBlank,
+          lesson: lessonScore,
+          total: totalScore
+        },
+        completedChallenges: user.challengeScore.length,
+        completedLessons: user.userLessonScore.length,
+        createdAt: user.createdAt
+      };
+    });
+
+    // Add ranking
+    const rankedUsers = usersWithScores.map((user, index) => ({
+      ...user,
+      rank: index + 1 + skip
+    }));
+
+    // Apply pagination
+    const paginatedUsers = rankedUsers.slice(skip, skip + limit);
+    const total = usersWithScores.length;
+
+    return {
+      data: paginatedUsers,
+      pagination: {
+        page: +page,
+        limit: +limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    };
   }
 }

@@ -3,9 +3,11 @@ import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiQuery } from 
 import { AdminChallengeService } from './admin-challenge.service';
 import { CreateChallengeDto } from './dto/create-challenge.dto';
 import { UpdateChallengeDto } from './dto/update-challenge.dto';
+import { UserScoresQueryDto } from './dto/user-scores-query.dto';
 import { JwtAuthGuard } from 'src/identities/auth/guards/jwt.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { UseGuards } from '@nestjs/common';
+import { UuidValidationPipe } from 'src/common/validators/uuid.validator';
 
 @ApiTags('Admin - Challenge')
 @UseGuards(JwtAuthGuard)
@@ -76,6 +78,61 @@ export class AdminChallengeController {
   }
 
   @ApiOperation({ 
+    summary: 'Lấy danh sách điểm của user',
+    description: 'Lấy danh sách điểm của tất cả user với chi tiết theo từng loại challenge và xếp hạng'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Danh sách điểm user với phân trang',
+    schema: {
+      type: 'object',
+      properties: {
+        data: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              name: { type: 'string' },
+              email: { type: 'string' },
+              avatar: { type: 'string' },
+              totalScore: { type: 'number' },
+              challengeScores: {
+                type: 'object',
+                properties: {
+                  quiz: { type: 'number' },
+                  puzzle: { type: 'number' }, 
+                  ordering: { type: 'number' },
+                  fillBlank: { type: 'number' }
+                }
+              },
+              lessonScore: { type: 'number' },
+              rank: { type: 'number' },
+              completedChallenges: { type: 'number' }
+            }
+          }
+        },
+        pagination: {
+          type: 'object',
+          properties: {
+            page: { type: 'number' },
+            limit: { type: 'number' },
+            total: { type: 'number' },
+            pages: { type: 'number' }
+          }
+        }
+      }
+    }
+  })
+  @ApiQuery({ name: 'page', required: false, description: 'Trang hiện tại', example: 1 })
+  @ApiQuery({ name: 'limit', required: false, description: 'Số lượng mỗi trang', example: 10 })
+  @ApiQuery({ name: 'search', required: false, description: 'Tìm kiếm theo tên hoặc email' })
+  @Get('user-scores')
+  getUserScores(@Query() query: UserScoresQueryDto) {
+    return this.challengeService.getUserScores(query);
+  }
+
+  @ApiOperation({ 
     summary: 'Lấy chi tiết challenge',
     description: 'Lấy chi tiết đầy đủ của challenge bao gồm tất cả questions, answers, và data theo từng loại challenge.'
   })
@@ -143,7 +200,7 @@ export class AdminChallengeController {
     }
   })
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', UuidValidationPipe) id: string) {
     return this.challengeService.findOne(id);
   }
 
@@ -160,7 +217,7 @@ export class AdminChallengeController {
   @ApiBody({ description: 'Dữ liệu cập nhật', type: UpdateChallengeDto })
   @ApiResponse({ status: 200, description: 'Cập nhật thành công' })
   @Put(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateChallengeDto) {
+  update(@Param('id', UuidValidationPipe) id: string, @Body() dto: UpdateChallengeDto) {
     return this.challengeService.update(id, dto);
   }
 
@@ -169,7 +226,7 @@ export class AdminChallengeController {
   @ApiResponse({ status: 204, description: 'Xóa thành công' })
   @HttpCode(HttpStatus.NO_CONTENT)
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id', UuidValidationPipe) id: string) {
     return this.challengeService.remove(id);
   }
 }
