@@ -4,6 +4,7 @@ import { CreateChallengeDto } from './dto/create-challenge.dto';
 import { UpdateChallengeDto } from './dto/update-challenge.dto';
 import { ChallengeStatus, ChallengeType } from './dto/create-challenge.dto';
 import { UserScoresQueryDto } from './dto/user-scores-query.dto';
+import { getFullUrl } from '../../common/helpers/helper';
 
 @Injectable()
 export class AdminChallengeService {
@@ -86,6 +87,11 @@ export class AdminChallengeService {
     return {
       data: data.map(challenge => ({
         ...challenge,
+        // Process image from puzzleChallenge if exists
+        puzzleChallenge: challenge.puzzleChallenge ? {
+          ...challenge.puzzleChallenge,
+          image: getFullUrl(challenge.puzzleChallenge.image)
+        } : null,
         // Thêm summary info cho từng challenge
         summary: this.getChallengesSummary(challenge),
         stats: {
@@ -180,6 +186,11 @@ export class AdminChallengeService {
     // Format lại data để dễ sử dụng ở frontend
     const formattedChallenge = {
       ...challenge,
+      // Process image from puzzleChallenge if exists
+      puzzleChallenge: challenge.puzzleChallenge ? {
+        ...challenge.puzzleChallenge,
+        image: getFullUrl(challenge.puzzleChallenge.image)
+      } : null,
       // Chuyển đổi data theo type để dễ dàng sử dụng
       data: this.formatChallengeData(challenge),
       // Thống kê
@@ -648,7 +659,10 @@ export class AdminChallengeService {
     const total = usersWithScores.length;
 
     return {
-      data: paginatedUsers,
+      data: paginatedUsers.map(user => ({
+        ...user,
+        avatar: getFullUrl(user.avatar)
+      })),
       pagination: {
         page: +page,
         limit: +limit,

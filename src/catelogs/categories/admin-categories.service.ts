@@ -3,6 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { CategoryStatus } from './enums/category-status.enum';
+import { getFullUrl } from '../../common/helpers/helper';
 
 @Injectable()
 export class AdminCategoriesService {
@@ -47,7 +48,7 @@ export class AdminCategoriesService {
     if (search) {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
-        { short_description: { contains: search, mode: 'insensitive' } }
+        { slug: { contains: search, mode: 'insensitive' } }
       ];
     }
 
