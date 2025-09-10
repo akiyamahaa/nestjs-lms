@@ -6,6 +6,7 @@ import { ConfigAppModule } from './configs/config-app.module';
 import { AuthModule } from './identities/auth/auth.module';
 import { UsersModule } from './identities/users/users.module';
 import { AdminModule } from './identities/admin/admin.module';
+import { AdminDashboardModule } from './admin/admin-dashboard.module';
 import { CategoriesModule } from './catelogs/categories/categories.module';
 import { ProductsModule } from './catelogs/products/products.module';
 import { ConfigModule } from '@nestjs/config';
@@ -22,6 +23,7 @@ import { ScoresModule } from './scores/scores.module';
     AuthModule,
     UsersModule,
     AdminModule,
+    AdminDashboardModule,
     CategoriesModule,
     ProductsModule,
     ConfigModule.forRoot({
