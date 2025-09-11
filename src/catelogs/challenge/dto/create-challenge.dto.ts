@@ -47,7 +47,7 @@ class PuzzleChallengeDto {
   @IsString()
   instruction: string;
   
-  @ApiProperty()
+  @ApiProperty({ description: 'Image URL hoặc base64 string (data:image/jpeg;base64,...)', example: 'https://example.com/image.jpg hoặc data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...' })
   @IsString()
   image: string;
 }

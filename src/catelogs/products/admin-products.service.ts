@@ -47,6 +47,12 @@ export class AdminProductsService {
           select: {
             id: true,
             title: true,
+            lessons: {
+              select: {
+                id: true,
+                type: true
+              }
+            },
             _count: {
               select: {
                 lessons: true
@@ -68,16 +74,38 @@ export class AdminProductsService {
     });
 
     return {
-      data: products.map(product => ({
-        ...product,
-        thumbnail: getFullUrl(product.thumbnail),
-        stats: {
-          totalModules: product._count.modules,
-          totalEnrollments: product._count.enrollments,
-          totalReviews: product._count.reviews,
-          totalLessons: product.modules.reduce((sum, module) => sum + module._count.lessons, 0)
-        }
-      })),
+      data: products.map(product => {
+        // Đếm lessons theo loại cho từng product
+        const allLessons = product.modules.flatMap(module => module.lessons);
+        const lessonsByType = allLessons.reduce((acc, lesson) => {
+          acc[lesson.type] = (acc[lesson.type] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+
+        // Đảm bảo có đủ 3 loại lesson với giá trị mặc định là 0
+        const lessonTypes = {
+          video: lessonsByType.video || 0,
+          quiz: lessonsByType.quiz || 0,
+          content: lessonsByType.content || 0
+        };
+
+        return {
+          ...product,
+          thumbnail: getFullUrl(product.thumbnail),
+          modules: product.modules.map(module => ({
+            id: module.id,
+            title: module.title,
+            _count: module._count
+          })), // Remove lessons from modules to avoid exposing too much data
+          stats: {
+            totalModules: product._count.modules,
+            totalEnrollments: product._count.enrollments,
+            totalReviews: product._count.reviews,
+            totalLessons: product.modules.reduce((sum, module) => sum + module._count.lessons, 0),
+            lessonsByType: lessonTypes
+          }
+        };
+      }),
       pagination: {
         page: +page,
         limit: +limit,

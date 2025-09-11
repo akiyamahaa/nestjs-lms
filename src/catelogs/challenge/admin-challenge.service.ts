@@ -4,7 +4,7 @@ import { CreateChallengeDto } from './dto/create-challenge.dto';
 import { UpdateChallengeDto } from './dto/update-challenge.dto';
 import { ChallengeStatus, ChallengeType } from './dto/create-challenge.dto';
 import { UserScoresQueryDto } from './dto/user-scores-query.dto';
-import { getFullUrl } from '../../common/helpers/helper';
+import { getFullUrl, isBase64Image, saveBase64ImageToCloudinary } from '../../common/helpers/helper';
 
 @Injectable()
 export class AdminChallengeService {
@@ -298,12 +298,22 @@ export class AdminChallengeService {
       if (!dto.puzzle.instruction) throw new BadRequestException('Puzzle instruction is required');
       if (!dto.puzzle.image) throw new BadRequestException('Puzzle image is required');
       
-      console.log('Creating puzzle challenge', dto.puzzle);
+      // Xử lý image - nếu là base64 thì upload lên Cloudinary, nếu là URL thì giữ nguyên
+      let imageUrl = dto.puzzle.image;
+      if (isBase64Image(dto.puzzle.image)) {
+        try {
+          imageUrl = await saveBase64ImageToCloudinary(dto.puzzle.image, 'challenges');
+        } catch (error) {
+          throw new BadRequestException('Failed to upload image to Cloudinary: ' + error.message);
+        }
+      }
+      
+      console.log('Creating puzzle challenge', { ...dto.puzzle, image: imageUrl });
       await this.prisma.puzzleChallenge.create({
         data: {
           challenge_id: challenge.id,
           instruction: dto.puzzle.instruction,
-          image: dto.puzzle.image,
+          image: imageUrl,
         },
       });
     }
@@ -443,11 +453,23 @@ export class AdminChallengeService {
       if (!dto.puzzle.instruction || !dto.puzzle.image) {
         throw new BadRequestException('Puzzle requires instruction and image');
       }
+      
+      // Xử lý image - nếu là base64 thì upload lên Cloudinary, nếu là URL thì giữ nguyên
+      let imageUrl = dto.puzzle.image;
+      // if (isBase64Image(dto.puzzle.image)) {
+        console.log('Uploading new puzzle image to Cloudinary');
+        try {
+          imageUrl = await saveBase64ImageToCloudinary(dto.puzzle.image, 'challenges');
+        } catch (error) {
+          throw new BadRequestException('Failed to upload image to Cloudinary: ' + error.message);
+        }
+      // }
+      
       await this.prisma.puzzleChallenge.create({
         data: {
           challenge_id: challenge.id,
           instruction: dto.puzzle.instruction,
-          image: dto.puzzle.image,
+          image: imageUrl,
         },
       });
     }

@@ -38,7 +38,7 @@ class UpdatePuzzleChallengeDto {
   @IsOptional()
   instruction?: string;
   
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Image URL hoặc base64 string (data:image/jpeg;base64,...)', example: 'https://example.com/image.jpg hoặc data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...' })
   @IsOptional()
   image?: string;
 }
