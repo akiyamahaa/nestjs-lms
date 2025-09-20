@@ -150,19 +150,37 @@ export class ChallengeService {
         throw new BadRequestException('Unsupported challenge type');
     }
 
-    // Lưu điểm vào database
-    const challengeScore = await this.prisma.challengeScore.upsert({
+    // Kiểm tra điểm hiện tại của user cho challenge này
+    const existingScore = await this.prisma.challengeScore.findUnique({
       where: { user_id_challenge_id: { user_id: userId, challenge_id: challengeId } },
-      update: { score: result.score, submitted_at: new Date() },
-      create: { user_id: userId, challenge_id: challengeId, score: result.score, submitted_at: new Date() },
     });
+
+    // Chỉ cập nhật nếu điểm mới cao hơn điểm hiện tại
+    let challengeScore;
+    if (!existingScore) {
+      // Tạo mới nếu chưa có điểm
+      challengeScore = await this.prisma.challengeScore.create({
+        data: { user_id: userId, challenge_id: challengeId, score: result.score, submitted_at: new Date() },
+      });
+    } else if (result.score > existingScore.score) {
+      // Chỉ cập nhật nếu điểm mới cao hơn
+      challengeScore = await this.prisma.challengeScore.update({
+        where: { user_id_challenge_id: { user_id: userId, challenge_id: challengeId } },
+        data: { score: result.score, submitted_at: new Date() },
+      });
+    } else {
+      // Giữ nguyên điểm cũ nếu điểm mới không cao hơn
+      challengeScore = existingScore;
+    }
 
     return {
       challengeId,
       score: result.score,
+      savedScore: challengeScore.score, // Điểm được lưu vào database
       totalQuestions: result.totalQuestions,
       correctAnswers: result.correctAnswers,
       submittedAt: challengeScore.submitted_at,
+      isNewRecord: !existingScore || result.score > existingScore.score, // Có phải điểm kỷ lục mới không
       details: result.details,
     };
   }
