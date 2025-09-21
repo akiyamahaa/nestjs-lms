@@ -6,28 +6,61 @@ import {
   Delete,
   Param,
   Body,
+  Query,
   UploadedFile,
   UseInterceptors,
+  UseGuards,
   BadRequestException,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { 
+  ApiTags, 
+  ApiOperation, 
+  ApiResponse, 
+  ApiParam, 
+  ApiBody, 
+  ApiConsumes, 
+  ApiQuery,
+  ApiBearerAuth 
+} from '@nestjs/swagger';
 import { AdminProductsService } from './admin-products.service';
 import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
+import { AdminProductQueryDto } from './dto/admin-product-query.dto';
+import { AdminProductStatsResponseDto } from './dto/product-response.dto';
 import { storage } from 'src/cloudinary/cloudinary.storage';
 import { validateOrReject } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
+import { AuthGuard } from '@nestjs/passport';
 
-@ApiTags('Products')
-@Controller('products')
+@ApiTags('Admin - Products')
+@ApiBearerAuth()
+@UseGuards(AuthGuard('jwt'))
+@Controller('admin/products')
 export class AdminProductsController {
   constructor(private readonly productsService: AdminProductsService) { }
 
-  @ApiOperation({ summary: 'Lấy tất cả sản phẩm' })
+  @ApiOperation({ 
+    summary: 'Lấy danh sách sản phẩm với phân trang và tìm kiếm',
+    description: 'Lấy danh sách sản phẩm với filter, search và phân trang'
+  })
   @ApiResponse({ status: 200, description: 'Danh sách sản phẩm' })
   @Get()
-  findAll() {
-    return this.productsService.findAll();
+  findAll(@Query() query: AdminProductQueryDto) {
+    return this.productsService.findAll(query);
+  }
+
+  @ApiOperation({ summary: 'Lấy thống kê sản phẩm' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Thống kê sản phẩm',
+    type: AdminProductStatsResponseDto
+  })
+  @Get('stats')
+  getStats() {
+    return this.productsService.getStats();
   }
 
   @Post()
@@ -84,10 +117,10 @@ export class AdminProductsController {
     return this.productsService.findOne(id);
   }
 
-  @ApiOperation({ summary: 'Cập nhật sản phẩm ' })
+  @ApiOperation({ summary: 'Cập nhật sản phẩm' })
   @ApiParam({ name: 'id', description: 'ID sản phẩm', type: String })
   @ApiConsumes('multipart/form-data')
-  @ApiBody({ type: CreateProductDto })
+  @ApiBody({ type: UpdateProductDto })
   @ApiResponse({ status: 200, description: 'Cập nhật thành công' })
   @Put(':id')
   @UseInterceptors(FileInterceptor('thumbnail', {
@@ -157,7 +190,7 @@ export class AdminProductsController {
     }
 
     // Convert về instance của DTO và validate
-    const dto = plainToInstance(CreateProductDto, data);
+    const dto = plainToInstance(UpdateProductDto, data);
     await validateOrReject(dto);
 
     const thumbnailPath = file ? file.path : undefined;
@@ -170,7 +203,8 @@ export class AdminProductsController {
 
   @ApiOperation({ summary: 'Xóa mềm sản phẩm' })
   @ApiParam({ name: 'id', description: 'ID sản phẩm', type: String })
-  @ApiResponse({ status: 200, description: 'Xóa thành công' })
+  @ApiResponse({ status: 204, description: 'Xóa thành công' })
+  @HttpCode(HttpStatus.NO_CONTENT)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.productsService.remove(id);

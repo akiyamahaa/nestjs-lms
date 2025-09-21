@@ -16,20 +16,23 @@ import {
   ApiBearerAuth,
   ApiOperation,
   ApiQuery,
+  ApiParam,
+  ApiBody,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { AdminService } from './admin.service';
 import { EditUserDto } from '../users/dto/edit-user.dto';
 import { CreateUserDto } from '../users/dto/create-user.dto';
+import { ChangeRoleDto } from './dto/change-role.dto';
 
-@ApiTags('Admin')
+@ApiTags('Admin User')
 @ApiBearerAuth()
 @Controller('admin')
 @UseGuards(JwtAuthGuard)
 export class AdminController {
   constructor(private readonly AdminService: AdminService) {}
 
-  @Get()
+  @Get('users')
   @ApiOperation({ summary: 'Admin get all users' })
   @ApiQuery({ name: 'role', required: false })
   @ApiQuery({ name: 'keyword', required: false })
@@ -44,28 +47,55 @@ export class AdminController {
     return this.AdminService.getAllUsers(role, keyword, page, perPage);
   }
 
-  @Get(':id')
+  @Get('users/:id')
   @ApiOperation({ summary: 'Admin get user by ID' })
   async getUserById(@Param('id') id: string) {
     return this.AdminService.getUserById(id);
   }
 
-  @Post()
+  @Post('users')
   @ApiOperation({ summary: 'Admin create user' })
   async createUser(@Body() dto: CreateUserDto) {
     return this.AdminService.createUser(dto);
   }
 
-  @Patch(':id')
+  @Patch('users/:id')
   @ApiOperation({ summary: 'Admin edit user' })
   async editUser(@Param('id') id: string, @Body() dto: EditUserDto) {
     return this.AdminService.editUser(id, dto);
   }
 
-  @Delete(':id')
+  @Delete('users/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Admin delete user' })
   async deleteUser(@Param('id') id: string) {
     return this.AdminService.deleteUser(id);
+  }
+
+  @Get('users/stats/overview')
+  @ApiOperation({ summary: 'Get user statistics overview' })
+  async getUserStats() {
+    return this.AdminService.getUserStats();
+  }
+
+  @Patch('users/:id/verification')
+  @ApiOperation({ summary: 'Toggle user verification status' })
+  async toggleUserVerification(@Param('id') id: string) {
+    return this.AdminService.toggleUserVerification(id);
+  }
+
+  @Patch('users/:id/role')
+  @ApiOperation({ summary: 'Change user role' })
+  async changeUserRole(
+    @Param('id') id: string,
+    @Body('role') role: string
+  ) {
+    return this.AdminService.changeUserRole(id, role);
+  }
+
+  @Get('users/:id/activity')
+  @ApiOperation({ summary: 'Get user activity history' })
+  async getUserActivity(@Param('id') id: string) {
+    return this.AdminService.getUserActivity(id);
   }
 }
