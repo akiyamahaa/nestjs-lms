@@ -18,7 +18,11 @@ async function bootstrap() {
   );
 
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://127.0.0.1:3000'], // Cho phép cả localhost và 127.0.0.1
+    origin: [
+      'http://localhost:3000',
+      'http://127.0.0.1:3000',
+      'https://nextjs-history-lms.vercel.app',
+    ], // Cho phép cả localhost và 127.0.0.1
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true, // Nếu dùng cookie, JWT trong header
   });
