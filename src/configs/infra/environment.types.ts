@@ -12,6 +12,10 @@ export type EnvironmentConfig = NodeJS.ProcessEnv & {
   JWT_ACCESS_TOKEN_TTL: number;
   JWT_REFRESH_TOKEN_TTL: number;
 
+  // Resend config
+  RESEND_API_KEY: string;
+  EMAIL_FROM: string;
+
   // Email Config
   EMAIL_HOST: string;
   EMAIL_PORT: number;

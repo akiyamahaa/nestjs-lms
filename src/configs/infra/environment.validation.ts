@@ -16,6 +16,10 @@ const environmentValidation = Joi.object({
   JWT_ACCESS_TOKEN_TTL: Joi.number().integer().required(),
   JWT_REFRESH_TOKEN_TTL: Joi.number().integer().required(),
 
+  // Resend Config
+  RESEND_API_KEY: Joi.string().required(),
+  EMAIL_FROM: Joi.string().required(),
+
   // Email Config
   EMAIL_HOST: Joi.string().required(),
   EMAIL_PORT: Joi.number().integer().required(),

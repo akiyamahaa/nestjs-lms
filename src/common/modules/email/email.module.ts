@@ -1,11 +1,12 @@
 import * as path from 'path';
 import { Global, Module } from '@nestjs/common';
-import { EmailService } from './providers/email.service';
 import { MailerModule, MailerOptions } from '@nestjs-modules/mailer';
 import { EjsAdapter } from '@nestjs-modules/mailer/dist/adapters/ejs.adapter';
 import { ConfigService } from '@nestjs/config';
 import { EConfigKeys } from 'src/common/types/config-keys';
 import { IMailConfig } from 'src/configs/infra/mail.config';
+import { ResendProvider } from './providers/resend.provider';
+import { SmtpProvider } from './providers/smtp.provider';
 
 @Global()
 @Module({
@@ -45,7 +46,7 @@ import { IMailConfig } from 'src/configs/infra/mail.config';
       },
     }),
   ],
-  providers: [EmailService],
-  exports: [EmailService],
+  providers: [ResendProvider, SmtpProvider],
+  exports: [ResendProvider, SmtpProvider],
 })
 export class EmailModule {}

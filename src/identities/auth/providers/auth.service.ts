@@ -15,13 +15,13 @@ import { ConfigService } from '@nestjs/config';
 import { JwtConfig } from 'src/common/types/jwt-config.interface';
 import { EConfigKeys } from 'src/common/types/config-keys';
 import { VerificationsService } from 'src/identities/verifications/providers/verifications.service';
-import { EmailService } from 'src/common/modules/email/providers/email.service';
 import { SignInDto } from '../dto/sign-in.dto';
 import { IAuthToken } from '../interfaces/auth-tokens.interface';
 import { User, PrismaClient } from 'generated/prisma';
 import { HashingProvider } from './hashing.provider';
 import { ForgotPasswordDto } from '../dto/forgot-password.dto';
 import { ResetPasswordDto } from '../dto/reset-password.dto';
+import { ResendProvider } from 'src/common/modules/email/providers/resend.provider';
 
 interface JwtPayload {
   sub: string;
@@ -37,7 +37,7 @@ export class AuthService {
     private jwt: JwtService,
     private verificationsService: VerificationsService,
     private config: ConfigService,
-    private emailService: EmailService,
+    private resendEmail: ResendProvider,
     private hashingProvider: HashingProvider,
   ) {}
 
@@ -48,7 +48,7 @@ export class AuthService {
   async signUp(signUpDto: SignUpDto) {
     const user = await this.usersService.createUser(signUpDto);
     const otp = await this.verificationsService.generateAndSaveOtp(user.id);
-    await this.emailService.sendOtp(user.email, otp.code);
+    await this.resendEmail.sendOtp(user.email, otp.code);
     return {
       message: 'OTP sent to email',
       userId: user.id,
@@ -126,11 +126,11 @@ export class AuthService {
     if (user.isVerified) throw new BadRequestException('User already verified');
 
     const otp = await this.verificationsService.generateAndSaveOtp(user.id);
-    await this.emailService.sendOtp(email, otp.code);
+    await this.resendEmail.sendOtp(email, otp.code);
 
-    return { 
+    return {
       userId: user.id,
-      message: 'OTP resent successfully' 
+      message: 'OTP resent successfully',
     };
   }
 
@@ -169,7 +169,7 @@ export class AuthService {
 
   private async handleUnverifiedUser(user: User) {
     const otp = await this.verificationsService.generateAndSaveOtp(user.id);
-    await this.emailService.sendOtp(user.email, otp.code);
+    await this.resendEmail.sendOtp(user.email, otp.code);
   }
 
   async forgotPassword(dto: ForgotPasswordDto) {
@@ -185,11 +185,11 @@ export class AuthService {
     const otp = await this.verificationsService.generateAndSaveOtp(user.id);
 
     // Send OTP via email
-    await this.emailService.sendOtp(user.email, otp.code);
+    await this.resendEmail.sendOtp(user.email, otp.code);
 
-    return { 
+    return {
       userId: user.id,
-      message: 'Password reset email sent' 
+      message: 'Password reset email sent',
     };
   }
   async resetPassword(dto: ResetPasswordDto) {

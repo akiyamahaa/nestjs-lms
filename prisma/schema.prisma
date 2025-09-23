@@ -6,7 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  // output   = "../generated/prisma"
 }
 
 datasource db {
@@ -15,7 +15,7 @@ datasource db {
 }
 
 model User {
-  id         String  @id @default(uuid()) @db.Uuid
+  id         String   @id @default(uuid()) @db.Uuid
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   email      String   @unique
@@ -27,12 +27,12 @@ model User {
   age        Int?
   grade      Grade?
 
-  otps       OTP[]
-  enrollments Enrollment[]
-  reviews     Review[]
+  otps               OTP[]
+  enrollments        Enrollment[]
+  reviews            Review[]
   userLessonProgress UserLessonProgress[]
-  challengeScore ChallengeScore[]
-  userLessonScore UserLessonScore[]
+  challengeScore     ChallengeScore[]
+  userLessonScore    UserLessonScore[]
   userCourseProgress UserCourseProgress[]
 
   @@map("users")
@@ -47,7 +47,7 @@ model OTP {
   isUsed Boolean @default(false)
 
   userId String @db.Uuid
-  user   User @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
 
   @@map("otps")
 }
@@ -94,9 +94,9 @@ model Product {
   updated_at DateTime  @updatedAt
   deleted_at DateTime? @db.Timestamp(6)
 
-  modules Module[]
-  enrollments Enrollment[]
-  reviews Review[]
+  modules            Module[]
+  enrollments        Enrollment[]
+  reviews            Review[]
   userCourseProgress UserCourseProgress[]
 
   @@unique([label, slug])
@@ -116,7 +116,7 @@ model Module {
   deleted_at        DateTime?    @db.Timestamp(6)
 
   lessons Lesson[]
-  
+
   @@map("modules")
 }
 
@@ -135,8 +135,8 @@ model Lesson {
   updated_at     DateTime     @updatedAt
   deleted_at     DateTime?    @db.Timestamp(6)
 
-  question QuizQuestion[]
-  userProgress UserLessonProgress[]
+  question        QuizQuestion[]
+  userProgress    UserLessonProgress[]
   userLessonScore UserLessonScore[]
 
   @@map("lessons")
@@ -146,8 +146,8 @@ model Enrollment {
   id         String   @id @default(uuid()) @db.Uuid
   user_id    String   @db.Uuid
   product_id String   @db.Uuid
-  product    Product @relation(fields: [product_id], references: [id])
-  user       User    @relation(fields: [user_id], references: [id])
+  product    Product  @relation(fields: [product_id], references: [id])
+  user       User     @relation(fields: [user_id], references: [id])
   created_at DateTime @default(now())
 
   @@unique([user_id, product_id])
@@ -160,7 +160,7 @@ model Review {
   product_id String   @db.Uuid
   rating     Int      @db.SmallInt
   comment    String?
-  status     Boolean @default(true)
+  status     Boolean  @default(true)
   created_at DateTime @default(now())
 
   user    User    @relation(fields: [user_id], references: [id])
@@ -202,29 +202,29 @@ enum LessonStatus {
 }
 
 model QuizQuestion {
-  id           String       @id @default(uuid()) @db.Uuid
-  lesson_id    String       @db.Uuid
-  lesson       Lesson       @relation(fields: [lesson_id], references: [id])
-  question     String
-  explanation  String?
-  created_at   DateTime     @default(now())
-  updated_at   DateTime     @updatedAt
-  deleted_at   DateTime?    @db.Timestamp(6)
+  id          String    @id @default(uuid()) @db.Uuid
+  lesson_id   String    @db.Uuid
+  lesson      Lesson    @relation(fields: [lesson_id], references: [id])
+  question    String
+  explanation String?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  deleted_at  DateTime? @db.Timestamp(6)
 
-  answers      QuizAnswer[]
+  answers QuizAnswer[]
 
   @@map("quiz_questions")
 }
 
 model QuizAnswer {
-  id             String       @id @default(uuid()) @db.Uuid
-  quiz_question_id String     @db.Uuid
-  quiz_question  QuizQuestion @relation(fields: [quiz_question_id], references: [id])
-  answer         String
-  is_correct     Boolean      @default(false)
-  created_at     DateTime     @default(now())
-  updated_at     DateTime     @updatedAt
-  deleted_at     DateTime?    @db.Timestamp(6)
+  id               String       @id @default(uuid()) @db.Uuid
+  quiz_question_id String       @db.Uuid
+  quiz_question    QuizQuestion @relation(fields: [quiz_question_id], references: [id])
+  answer           String
+  is_correct       Boolean      @default(false)
+  created_at       DateTime     @default(now())
+  updated_at       DateTime     @updatedAt
+  deleted_at       DateTime?    @db.Timestamp(6)
 
   @@map("quiz_answers")
 }
@@ -237,23 +237,23 @@ enum ChallengeType {
 }
 
 model Challenge {
-  id          String           @id @default(uuid()) @db.Uuid
+  id          String          @id @default(uuid()) @db.Uuid
   title       String
-  slug        String           @unique @db.VarChar(255)
+  slug        String          @unique @db.VarChar(255)
   description String?
   type        ChallengeType
-order       Int              @default(0)
-  status      ChallengeStatus  @default(draft)
-  created_at  DateTime         @default(now())
-  updated_at  DateTime         @updatedAt
+  order       Int             @default(0)
+  status      ChallengeStatus @default(draft)
+  created_at  DateTime        @default(now())
+  updated_at  DateTime        @updatedAt
 
-  questions   ChallengeQuestion[]
+  questions      ChallengeQuestion[]
   challengeScore ChallengeScore[]
 
-    // 1-1 relations to each challenge type
-  puzzleChallenge     PuzzleChallenge?     @relation("PuzzleChallengeOnChallenge")
-  orderingChallenge   OrderingChallenge?   @relation("OrderingChallengeOnChallenge")
-  fillBlankChallenge  FillBlankChallenge?  @relation("FillBlankChallengeOnChallenge")
+  // 1-1 relations to each challenge type
+  puzzleChallenge    PuzzleChallenge?    @relation("PuzzleChallengeOnChallenge")
+  orderingChallenge  OrderingChallenge?  @relation("OrderingChallengeOnChallenge")
+  fillBlankChallenge FillBlankChallenge? @relation("FillBlankChallengeOnChallenge")
 
   @@map("challenge")
 }
@@ -265,15 +265,15 @@ enum ChallengeStatus {
 }
 
 model ChallengeQuestion {
-  id           String           @id @default(uuid()) @db.Uuid
-  challenge_id String           @db.Uuid
-  challenge    Challenge        @relation(fields: [challenge_id], references: [id])
+  id           String    @id @default(uuid()) @db.Uuid
+  challenge_id String    @db.Uuid
+  challenge    Challenge @relation(fields: [challenge_id], references: [id])
   question     String
   explanation  String?
-  created_at   DateTime         @default(now())
-  updated_at   DateTime         @updatedAt
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
 
-  answers      ChallengeAnswer[]
+  answers ChallengeAnswer[]
 
   @@map("challenge_question")
 }
@@ -295,8 +295,8 @@ model PuzzleChallenge {
   challenge_id String    @unique @db.Uuid
   challenge    Challenge @relation("PuzzleChallengeOnChallenge", fields: [challenge_id], references: [id])
 
-  instruction  String
-  image        String
+  instruction String
+  image       String
 
   @@map("puzzle_challenges")
 }
@@ -306,8 +306,8 @@ model OrderingChallenge {
   challenge_id String    @unique @db.Uuid
   challenge    Challenge @relation("OrderingChallengeOnChallenge", fields: [challenge_id], references: [id])
 
-  instruction  String
-  items        OrderingItem[]
+  instruction String
+  items       OrderingItem[]
 
   @@map("ordering_challenges")
 }
@@ -328,7 +328,7 @@ model FillBlankChallenge {
   challenge_id String    @unique @db.Uuid
   challenge    Challenge @relation("FillBlankChallengeOnChallenge", fields: [challenge_id], references: [id])
 
-  questions    FillBlankQuestion[]
+  questions FillBlankQuestion[]
 
   @@map("fill_blank_challenges")
 }
@@ -345,9 +345,9 @@ model FillBlankQuestion {
 }
 
 model UserLessonProgress {
-  id           String   @id @default(uuid()) @db.Uuid
-  user_id      String   @db.Uuid
-  lesson_id    String   @db.Uuid
+  id           String    @id @default(uuid()) @db.Uuid
+  user_id      String    @db.Uuid
+  lesson_id    String    @db.Uuid
   completed_at DateTime?
 
   user   User   @relation(fields: [user_id], references: [id])
@@ -398,9 +398,9 @@ model UserLessonScore {
 }
 
 model UserCourseProgress {
-  id           String   @id @default(uuid()) @db.Uuid
-  user_id      String   @db.Uuid
-  product_id   String   @db.Uuid
+  id           String    @id @default(uuid()) @db.Uuid
+  user_id      String    @db.Uuid
+  product_id   String    @db.Uuid
   completed_at DateTime?
 
   user   User    @relation(fields: [user_id], references: [id])
