@@ -3,9 +3,124 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { ProductStatus } from 'generated/prisma';
 import { getFullUrl, getSettingValue } from 'src/common/helpers/helper';
 
+import * as fs from 'fs';
+import * as path from 'path';
+
 @Injectable()
 export class ProductsService {
   constructor(private prisma: PrismaService) {}
+
+  /**
+   * Import products from a JSON file with modules, lessons and quiz questions
+   * @param filePath Absolute path to the JSON file
+   */
+  async importProductsFromJson(filePath: string) {
+    const absPath = path.isAbsolute(filePath) ? filePath : path.join(process.cwd(), filePath);
+    if (!fs.existsSync(absPath)) {
+      throw new NotFoundException('File not found: ' + absPath);
+    }
+    const raw = fs.readFileSync(absPath, 'utf-8');
+    let products: any[];
+    try {
+      products = JSON.parse(raw);
+    } catch (e) {
+      throw new Error('Invalid JSON format');
+    }
+    if (!Array.isArray(products)) {
+      throw new Error('JSON must be an array of products');
+    }
+    const created: any[] = [];
+    
+    for (const prod of products) {
+      // Validate required fields
+      if (!prod.title || !prod.slug || !prod.category_id) {
+        throw new Error('Missing required fields: title, slug, category_id');
+      }
+      
+      const productData: any = {
+        title: prod.title,
+        slug: prod.slug,
+        short_description: prod.short_description || '',
+        description: prod.description || null,
+        category_id: prod.category_id,
+        thumbnail: prod.thumbnail || '',
+        label: prod.label || 'new',
+        status: prod.status || 'draft',
+        requirements: prod.requirements || '',
+        learning_outcomes: prod.learning_outcomes || '',
+        preview_video: prod.preview_video || null,
+      };
+      
+      const product = await this.prisma.product.create({ data: productData });
+      
+      // Import modules if exists
+      if (prod.modules && Array.isArray(prod.modules)) {
+        for (const moduleData of prod.modules) {
+          const module = await this.prisma.module.create({
+            data: {
+              course_id: product.id,
+              title: moduleData.title,
+              short_description: moduleData.short_description || '',
+              order: moduleData.order || 0,
+              status: moduleData.status || 'draft',
+            }
+          });
+          
+          // Import lessons if exists
+          if (moduleData.lessons && Array.isArray(moduleData.lessons)) {
+            for (const lessonData of moduleData.lessons) {
+              const lesson = await this.prisma.lesson.create({
+                data: {
+                  module_id: module.id,
+                  title: lessonData.title,
+                  description: lessonData.description || '',
+                  type: lessonData.type || 'content',
+                  is_previewable: lessonData.is_previewable || false,
+                  status: lessonData.status || 'draft',
+                  order: lessonData.order || 0,
+                  attachment: lessonData.attachment || null,
+                }
+              });
+              
+              // Import quiz questions if lesson type is quiz
+              if (lessonData.type === 'quiz' && lessonData.questions && Array.isArray(lessonData.questions)) {
+                for (const questionData of lessonData.questions) {
+                  const question = await this.prisma.quizQuestion.create({
+                    data: {
+                      lesson_id: lesson.id,
+                      question: questionData.question,
+                      explanation: questionData.explanation || null,
+                    }
+                  });
+                  
+                  // Import quiz answers
+                  if (questionData.answers && Array.isArray(questionData.answers)) {
+                    for (const answerData of questionData.answers) {
+                      await this.prisma.quizAnswer.create({
+                        data: {
+                          quiz_question_id: question.id,
+                          answer: answerData.answer,
+                          is_correct: answerData.is_correct || false,
+                        }
+                      });
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      created.push(product);
+    }
+    
+    return { 
+      count: created.length, 
+      products: created,
+      message: `Successfully imported ${created.length} products with modules, lessons and quiz questions`
+    };
+  }
 
 
 async findAllForUser(filter: { category_id?: string; search?: string, page?: number, perPage?: number, sort?: string }) {
