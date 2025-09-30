@@ -1,13 +1,20 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { TenantService } from '../../common/services/tenant.service';
+import { PrismaClient } from 'generated/prisma';
 import { getFullUrl } from 'src/common/helpers/helper';
 import { SubmitChallengeDto } from './dto/submit-challenge.dto';
 
 @Injectable()
 export class ChallengeService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly tenantService: TenantService) {}
+
+  private async getTenantPrisma(): Promise<PrismaClient> {
+    return await this.tenantService.getPrismaClient();
+  }
 
   async findAll(filter?: { search?: string; type?: string; page?: number; perPage?: number }) {
+    const prisma = await this.getTenantPrisma();
+    
     const page = filter?.page && filter.page > 0 ? Number(filter.page) : 1;
     const perPage = filter?.perPage && filter.perPage > 0 ? Number(filter.perPage) : 10;
     const where: any = { status: 'published' };
@@ -21,8 +28,8 @@ export class ChallengeService {
       where.type = filter.type;
     }
     const [total, data] = await Promise.all([
-      this.prisma.challenge.count({ where }),
-      this.prisma.challenge.findMany({
+      prisma.challenge.count({ where }),
+      prisma.challenge.findMany({
         where,
         orderBy: { order: 'asc' },
         skip: (page - 1) * perPage,
@@ -32,7 +39,7 @@ export class ChallengeService {
 
     // Lấy điểm cao nhất cho từng challenge
     const challengeIds = data.map(challenge => challenge.id);
-    const maxScores = await this.prisma.challengeScore.groupBy({
+    const maxScores = await prisma.challengeScore.groupBy({
       by: ['challenge_id'],
       where: { challenge_id: { in: challengeIds } },
       _max: { score: true },
@@ -57,7 +64,9 @@ export class ChallengeService {
   }
 
   async findOne(id: string, userId?: string) {
-    const challenge = await this.prisma.challenge.findFirst({
+    const prisma = await this.getTenantPrisma();
+    
+    const challenge = await prisma.challenge.findFirst({
       where: { id, status: 'published' },
       include: {
         questions: { include: { answers: true } },
@@ -87,14 +96,14 @@ export class ChallengeService {
 
     let userScore: number | null = null;
     if (userId) {
-      const score = await this.prisma.challengeScore.findUnique({
+      const score = await prisma.challengeScore.findUnique({
         where: { user_id_challenge_id: { user_id: userId, challenge_id: id } },
       });
       userScore = score?.score ?? null;
     }
 
     // Lấy điểm cao nhất của challenge này
-    const maxScoreData = await this.prisma.challengeScore.aggregate({
+    const maxScoreData = await prisma.challengeScore.aggregate({
       where: { challenge_id: id },
       _max: { score: true },
     });
@@ -104,12 +113,14 @@ export class ChallengeService {
   }
 
   async updateChallengeProgress(userId: string, challengeId: string, score: number) {
+    const prisma = await this.getTenantPrisma();
+    
     // Kiểm tra challenge có tồn tại không
-    const challenge = await this.prisma.challenge.findUnique({ where: { id: challengeId } });
+    const challenge = await prisma.challenge.findUnique({ where: { id: challengeId } });
     if (!challenge) throw new NotFoundException('Challenge not found');
 
     // Upsert điểm và trạng thái làm bài
-    return this.prisma.challengeScore.upsert({
+    return prisma.challengeScore.upsert({
       where: { user_id_challenge_id: { user_id: userId, challenge_id: challengeId } },
       update: { score, submitted_at: new Date() },
       create: { user_id: userId, challenge_id: challengeId, score, submitted_at: new Date() },
@@ -117,8 +128,10 @@ export class ChallengeService {
   }
 
   async submitChallenge(userId: string, challengeId: string, submitData: SubmitChallengeDto) {
+    const prisma = await this.getTenantPrisma();
+    
     // Lấy thông tin challenge với tất cả dữ liệu liên quan
-    const challenge = await this.prisma.challenge.findFirst({
+    const challenge = await prisma.challenge.findFirst({
       where: { id: challengeId, status: 'published' },
       include: {
         questions: { include: { answers: true } },
@@ -151,7 +164,7 @@ export class ChallengeService {
     }
 
     // Kiểm tra điểm hiện tại của user cho challenge này
-    const existingScore = await this.prisma.challengeScore.findUnique({
+    const existingScore = await prisma.challengeScore.findUnique({
       where: { user_id_challenge_id: { user_id: userId, challenge_id: challengeId } },
     });
 
@@ -159,12 +172,12 @@ export class ChallengeService {
     let challengeScore;
     if (!existingScore) {
       // Tạo mới nếu chưa có điểm
-      challengeScore = await this.prisma.challengeScore.create({
+      challengeScore = await prisma.challengeScore.create({
         data: { user_id: userId, challenge_id: challengeId, score: result.score, submitted_at: new Date() },
       });
     } else if (result.score > existingScore.score) {
       // Chỉ cập nhật nếu điểm mới cao hơn
-      challengeScore = await this.prisma.challengeScore.update({
+      challengeScore = await prisma.challengeScore.update({
         where: { user_id_challenge_id: { user_id: userId, challenge_id: challengeId } },
         data: { score: result.score, submitted_at: new Date() },
       });

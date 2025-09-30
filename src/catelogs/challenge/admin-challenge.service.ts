@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { TenantService } from '../../common/services/tenant.service';
+import { PrismaClient } from 'generated/prisma';
 import { CreateChallengeDto } from './dto/create-challenge.dto';
 import { UpdateChallengeDto } from './dto/update-challenge.dto';
 import { ChallengeStatus, ChallengeType } from './dto/create-challenge.dto';
@@ -8,7 +9,11 @@ import { getFullUrl, isBase64Image, saveBase64ImageToCloudinary } from '../../co
 
 @Injectable()
 export class AdminChallengeService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly tenantService: TenantService) {}
+
+  private async getTenantPrisma(): Promise<PrismaClient> {
+    return await this.tenantService.getPrismaClient();
+  }
 
   async findAll(filter?: { search?: string; status?: string; type?: string; page?: number; perPage?: number }) {
     const page = filter?.page && filter.page > 0 ? Number(filter.page) : 1;
@@ -26,9 +31,10 @@ export class AdminChallengeService {
     if (filter?.type) {
       where.type = filter.type;
     }
+    const prisma = await this.getTenantPrisma();
     const [total, data] = await Promise.all([
-      this.prisma.challenge.count({ where }),
-      this.prisma.challenge.findMany({
+      prisma.challenge.count({ where }),
+      prisma.challenge.findMany({
         where,
         orderBy: { order: 'asc' },
         include: {
@@ -140,7 +146,8 @@ export class AdminChallengeService {
   }
 
   async findOne(id: string) {
-    const challenge = await this.prisma.challenge.findUnique({
+    const prisma = await this.getTenantPrisma();
+    const challenge = await prisma.challenge.findUnique({
       where: { id },
       include: {
         // Quiz questions và answers
@@ -250,11 +257,12 @@ export class AdminChallengeService {
   }
 
   async create(dto: CreateChallengeDto) {
+    const prisma = await this.getTenantPrisma();
     // Tự động tạo slug nếu không có và đảm bảo unique
     const slug = await this.ensureUniqueSlug(dto.slug || this.generateSlug(dto.title));
 
     // 1. Tạo challenge chính
-    const challenge = await this.prisma.challenge.create({
+    const challenge = await prisma.challenge.create({
       data: {
         title: dto.title,
         slug,
@@ -272,7 +280,7 @@ export class AdminChallengeService {
       // 1. Tạo questions và answers
       await Promise.all(
         dto.questions.map(async (q) => {
-          const question = await this.prisma.challengeQuestion.create({
+          const question = await prisma.challengeQuestion.create({
             data: {
               challenge_id: challenge.id,
               question: q.question,
@@ -280,7 +288,7 @@ export class AdminChallengeService {
             },
           });
           if (q.answers && q.answers.length > 0) {
-            await this.prisma.challengeAnswer.createMany({
+            await prisma.challengeAnswer.createMany({
               data: q.answers.map((a) => ({
                 challenge_question_id: question.id,
                 answer: a.answer,
@@ -309,7 +317,7 @@ export class AdminChallengeService {
       }
       
       console.log('Creating puzzle challenge', { ...dto.puzzle, image: imageUrl });
-      await this.prisma.puzzleChallenge.create({
+      await prisma.puzzleChallenge.create({
         data: {
           challenge_id: challenge.id,
           instruction: dto.puzzle.instruction,
@@ -321,7 +329,7 @@ export class AdminChallengeService {
       if (!dto.ordering) throw new BadRequestException('Missing ordering data');
       if (!dto.ordering.instruction) throw new BadRequestException('Ordering instruction is required');
       
-      const ordering = await this.prisma.orderingChallenge.create({
+      const ordering = await prisma.orderingChallenge.create({
         data: {
           challenge_id: challenge.id,
           instruction: dto.ordering.instruction,
@@ -335,7 +343,7 @@ export class AdminChallengeService {
           throw new BadRequestException('Ordering items must have unique correct_order values');
         }
         
-        await this.prisma.orderingItem.createMany({
+        await prisma.orderingItem.createMany({
           data: dto.ordering.items.map((item) => ({
             ordering_id: ordering.id,
             content: item.content,
@@ -346,13 +354,13 @@ export class AdminChallengeService {
     }
     if (dto.type === 'fillBlank') {
       if (!dto.fillBlank) throw new BadRequestException('Missing fillBlank data');
-      const fillBlank = await this.prisma.fillBlankChallenge.create({
+      const fillBlank = await prisma.fillBlankChallenge.create({
         data: {
           challenge_id: challenge.id,
         },
       });
       if (dto.fillBlank.questions?.length) {
-        await this.prisma.fillBlankQuestion.createMany({
+        await prisma.fillBlankQuestion.createMany({
           data: dto.fillBlank.questions.map((q) => ({
             challenge_id: fillBlank.id,
             sentence: q.sentence,
@@ -366,8 +374,9 @@ export class AdminChallengeService {
   }
 
   async update(id: string, dto: UpdateChallengeDto) {
+    const prisma = await this.getTenantPrisma();
     // Kiểm tra challenge có tồn tại không
-    const existingChallenge = await this.prisma.challenge.findUnique({ where: { id } });
+    const existingChallenge = await prisma.challenge.findUnique({ where: { id } });
     if (!existingChallenge) {
       throw new NotFoundException('Challenge not found');
     }
@@ -377,23 +386,23 @@ export class AdminChallengeService {
     
     if (isTypeChanged || dto.questions || dto.puzzle || dto.ordering || dto.fillBlank) {
       // Xóa toàn bộ question/answer cũ (nếu có)
-      const oldQuestions = await this.prisma.challengeQuestion.findMany({ where: { challenge_id: id } });
+      const oldQuestions = await prisma.challengeQuestion.findMany({ where: { challenge_id: id } });
       for (const q of oldQuestions) {
-        await this.prisma.challengeAnswer.deleteMany({ where: { challenge_question_id: q.id } });
+        await prisma.challengeAnswer.deleteMany({ where: { challenge_question_id: q.id } });
       }
-      await this.prisma.challengeQuestion.deleteMany({ where: { challenge_id: id } });
+      await prisma.challengeQuestion.deleteMany({ where: { challenge_id: id } });
 
       // Xóa bảng con cũ
-      await this.prisma.puzzleChallenge.deleteMany({ where: { challenge_id: id } });
-      const oldOrdering = await this.prisma.orderingChallenge.findFirst({ where: { challenge_id: id } });
+      await prisma.puzzleChallenge.deleteMany({ where: { challenge_id: id } });
+      const oldOrdering = await prisma.orderingChallenge.findFirst({ where: { challenge_id: id } });
       if (oldOrdering) {
-        await this.prisma.orderingItem.deleteMany({ where: { ordering_id: oldOrdering.id } });
-        await this.prisma.orderingChallenge.delete({ where: { id: oldOrdering.id } });
+        await prisma.orderingItem.deleteMany({ where: { ordering_id: oldOrdering.id } });
+        await prisma.orderingChallenge.delete({ where: { id: oldOrdering.id } });
       }
-      const oldFillBlank = await this.prisma.fillBlankChallenge.findFirst({ where: { challenge_id: id } });
+      const oldFillBlank = await prisma.fillBlankChallenge.findFirst({ where: { challenge_id: id } });
       if (oldFillBlank) {
-        await this.prisma.fillBlankQuestion.deleteMany({ where: { challenge_id: oldFillBlank.id } });
-        await this.prisma.fillBlankChallenge.delete({ where: { id: oldFillBlank.id } });
+        await prisma.fillBlankQuestion.deleteMany({ where: { challenge_id: oldFillBlank.id } });
+        await prisma.fillBlankChallenge.delete({ where: { id: oldFillBlank.id } });
       }
     }
 
@@ -414,7 +423,7 @@ export class AdminChallengeService {
     if (dto.status !== undefined) updateData.status = dto.status;
 
     // Cập nhật challenge chính
-    const challenge = await this.prisma.challenge.update({
+    const challenge = await prisma.challenge.update({
       where: { id },
       data: updateData,
     });
@@ -429,7 +438,7 @@ export class AdminChallengeService {
       await Promise.all(
         dto.questions.map(async (q) => {
           if (!q.question) return; // Skip incomplete questions
-          const question = await this.prisma.challengeQuestion.create({
+          const question = await prisma.challengeQuestion.create({
             data: {
               challenge_id: challenge.id,
               question: q.question,
@@ -437,7 +446,7 @@ export class AdminChallengeService {
             },
           });
           if (q.answers && q.answers.length > 0) {
-            await this.prisma.challengeAnswer.createMany({
+            await prisma.challengeAnswer.createMany({
               data: q.answers.filter(a => a.answer).map((a) => ({
                 challenge_question_id: question.id,
                 answer: a.answer!,
@@ -465,7 +474,7 @@ export class AdminChallengeService {
         }
       // }
       
-      await this.prisma.puzzleChallenge.create({
+      await prisma.puzzleChallenge.create({
         data: {
           challenge_id: challenge.id,
           instruction: dto.puzzle.instruction,
@@ -478,7 +487,7 @@ export class AdminChallengeService {
       if (!dto.ordering.instruction) {
         throw new BadRequestException('Ordering requires instruction');
       }
-      const ordering = await this.prisma.orderingChallenge.create({
+      const ordering = await prisma.orderingChallenge.create({
         data: {
           challenge_id: challenge.id,
           instruction: dto.ordering.instruction,
@@ -493,7 +502,7 @@ export class AdminChallengeService {
           throw new BadRequestException('Ordering items must have unique correct_order values');
         }
         
-        await this.prisma.orderingItem.createMany({
+        await prisma.orderingItem.createMany({
           data: validItems.map((item) => ({
             ordering_id: ordering.id,
             content: item.content!,
@@ -504,13 +513,13 @@ export class AdminChallengeService {
     }
     
     if (currentType === 'fillBlank' && dto.fillBlank) {
-      const fillBlank = await this.prisma.fillBlankChallenge.create({
+      const fillBlank = await prisma.fillBlankChallenge.create({
         data: {
           challenge_id: challenge.id,
         },
       });
       if (dto.fillBlank.questions?.length) {
-        await this.prisma.fillBlankQuestion.createMany({
+        await prisma.fillBlankQuestion.createMany({
           data: dto.fillBlank.questions.filter(q => q.sentence && q.correct_word).map((q) => ({
             challenge_id: fillBlank.id,
             sentence: q.sentence!,
@@ -524,20 +533,21 @@ export class AdminChallengeService {
   }
 
   async remove(id: string) {
-    const challenge = await this.prisma.challenge.findUnique({ where: { id } });
+    const prisma = await this.getTenantPrisma();
+    const challenge = await prisma.challenge.findUnique({ where: { id } });
     
     if (!challenge) {
       throw new NotFoundException('Challenge not found');
     }
 
     // Kiểm tra xem có user nào đã làm challenge này chưa
-    const challengeScores = await this.prisma.challengeScore.count({
+    const challengeScores = await prisma.challengeScore.count({
       where: { challenge_id: id }
     });
 
     if (challengeScores > 0) {
       // Nếu có người đã làm rồi thì chỉ được archive
-      await this.prisma.challenge.update({
+      await prisma.challenge.update({
         where: { id },
         data: { status: 'archived' as ChallengeStatus }
       });
@@ -546,27 +556,27 @@ export class AdminChallengeService {
 
     // Nếu chưa có ai làm thì có thể xóa cứng
     // Xóa toàn bộ question/answer liên quan
-    const oldQuestions = await this.prisma.challengeQuestion.findMany({ where: { challenge_id: id } });
+    const oldQuestions = await prisma.challengeQuestion.findMany({ where: { challenge_id: id } });
     for (const q of oldQuestions) {
-      await this.prisma.challengeAnswer.deleteMany({ where: { challenge_question_id: q.id } });
+      await prisma.challengeAnswer.deleteMany({ where: { challenge_question_id: q.id } });
     }
-    await this.prisma.challengeQuestion.deleteMany({ where: { challenge_id: id } });
+    await prisma.challengeQuestion.deleteMany({ where: { challenge_id: id } });
 
     // Xóa bảng con
-    await this.prisma.puzzleChallenge.deleteMany({ where: { challenge_id: id } });
-    const oldOrdering = await this.prisma.orderingChallenge.findFirst({ where: { challenge_id: id } });
+    await prisma.puzzleChallenge.deleteMany({ where: { challenge_id: id } });
+    const oldOrdering = await prisma.orderingChallenge.findFirst({ where: { challenge_id: id } });
     if (oldOrdering) {
-      await this.prisma.orderingItem.deleteMany({ where: { ordering_id: oldOrdering.id } });
-      await this.prisma.orderingChallenge.delete({ where: { id: oldOrdering.id } });
+      await prisma.orderingItem.deleteMany({ where: { ordering_id: oldOrdering.id } });
+      await prisma.orderingChallenge.delete({ where: { id: oldOrdering.id } });
     }
-    const oldFillBlank = await this.prisma.fillBlankChallenge.findFirst({ where: { challenge_id: id } });
+    const oldFillBlank = await prisma.fillBlankChallenge.findFirst({ where: { challenge_id: id } });
     if (oldFillBlank) {
-      await this.prisma.fillBlankQuestion.deleteMany({ where: { challenge_id: oldFillBlank.id } });
-      await this.prisma.fillBlankChallenge.delete({ where: { id: oldFillBlank.id } });
+      await prisma.fillBlankQuestion.deleteMany({ where: { challenge_id: oldFillBlank.id } });
+      await prisma.fillBlankChallenge.delete({ where: { id: oldFillBlank.id } });
     }
 
     // Xóa challenge
-    await this.prisma.challenge.delete({ where: { id } });
+    await prisma.challenge.delete({ where: { id } });
     return { message: 'Challenge deleted successfully' };
   }
 
@@ -580,11 +590,12 @@ export class AdminChallengeService {
   }
 
   private async ensureUniqueSlug(baseSlug: string, excludeId?: string): Promise<string> {
+    const prisma = await this.getTenantPrisma();
     let slug = baseSlug;
     let counter = 1;
 
     while (true) {
-      const existing = await this.prisma.challenge.findUnique({
+      const existing = await prisma.challenge.findUnique({
         where: { slug },
       });
 
@@ -598,6 +609,7 @@ export class AdminChallengeService {
   }
 
   async getUserScores(query: UserScoresQueryDto) {
+    const prisma = await this.getTenantPrisma();
     const { page = 1, limit = 10, search } = query;
     const skip = (page - 1) * limit;
 
@@ -612,7 +624,7 @@ export class AdminChallengeService {
     };
 
     // Get users with their scores
-    const users = await this.prisma.user.findMany({
+    const users = await prisma.user.findMany({
       where,
       select: {
         id: true,

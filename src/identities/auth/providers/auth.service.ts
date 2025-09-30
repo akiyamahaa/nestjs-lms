@@ -7,7 +7,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { TenantService } from 'src/common/services/tenant.service';
 import { SignUpDto } from '../dto/sign-up.dto';
 import { UsersService } from 'src/identities/users/providers/users.service';
 import { VerifyEmailDto } from '../dto/verify-email.dto';
@@ -18,7 +18,7 @@ import { VerificationsService } from 'src/identities/verifications/providers/ver
 import { EmailService } from 'src/common/modules/email/providers/email.service';
 import { SignInDto } from '../dto/sign-in.dto';
 import { IAuthToken } from '../interfaces/auth-tokens.interface';
-import { User } from 'generated/prisma';
+import { User, PrismaClient } from 'generated/prisma';
 import { HashingProvider } from './hashing.provider';
 import { ForgotPasswordDto } from '../dto/forgot-password.dto';
 import { ResetPasswordDto } from '../dto/reset-password.dto';
@@ -32,7 +32,7 @@ interface JwtPayload {
 @Injectable()
 export class AuthService {
   constructor(
-    private prisma: PrismaService,
+    private tenantService: TenantService,
     private usersService: UsersService,
     private jwt: JwtService,
     private verificationsService: VerificationsService,
@@ -40,6 +40,10 @@ export class AuthService {
     private emailService: EmailService,
     private hashingProvider: HashingProvider,
   ) {}
+
+  private async getTenantPrisma(): Promise<PrismaClient> {
+    return await this.tenantService.getPrismaClient();
+  }
 
   async signUp(signUpDto: SignUpDto) {
     const user = await this.usersService.createUser(signUpDto);
@@ -104,7 +108,9 @@ export class AuthService {
     if (!checkVerify) {
       throw new ForbiddenException('Invalid or expired OTP');
     }
-    const user = await this.prisma.user.update({
+    
+    const prisma = await this.getTenantPrisma();
+    const user = await prisma.user.update({
       where: { id: dto.userId },
       data: { isVerified: true },
     });
@@ -167,7 +173,8 @@ export class AuthService {
   }
 
   async forgotPassword(dto: ForgotPasswordDto) {
-    const user = await this.prisma.user.findUnique({
+    const prisma = await this.getTenantPrisma();
+    const user = await prisma.user.findUnique({
       where: { email: dto.email },
     });
 
@@ -193,8 +200,9 @@ export class AuthService {
       throw new ForbiddenException('OTP không hợp lệ hoặc đã hết hạn');
     }
 
+    const prisma = await this.getTenantPrisma();
     const hashed = await this.hashingProvider.hashPassword(password);
-    await this.prisma.user.update({
+    await prisma.user.update({
       where: { id: userId },
       data: { password: hashed },
     });
@@ -204,6 +212,7 @@ export class AuthService {
 
   async refreshToken(refreshToken: string): Promise<IAuthToken> {
     try {
+      const prisma = await this.getTenantPrisma();
       const jwtConfig = this.config.get<JwtConfig>(EConfigKeys.JWT);
       if (!jwtConfig) {
         throw new Error(
@@ -220,7 +229,7 @@ export class AuthService {
         throw new UnauthorizedException('Invalid or expired refresh token');
       }
 
-      const user = await this.prisma.user.findUnique({
+      const user = await prisma.user.findUnique({
         where: { id: payload.sub },
       });
 

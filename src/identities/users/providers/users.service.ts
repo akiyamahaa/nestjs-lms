@@ -1,9 +1,10 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { UserWithoutPassword } from 'src/identities/auth/interfaces/request-with-user.interface';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { TenantService } from 'src/common/services/tenant.service';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { HashingProvider } from 'src/identities/auth/providers/hashing.provider';
-import { User } from 'generated/prisma';
+import { User, PrismaClient } from 'generated/prisma';
 import { EditUserDto } from '../dto/edit-user.dto';
 import { ChangePasswordDto } from '../dto/change-password.dto';
 import { validate as isUuid } from 'uuid';
@@ -13,12 +14,18 @@ import { BadRequestException } from '@nestjs/common';
 export class UsersService {
   constructor(
     private prisma: PrismaService,
+    private tenantService: TenantService,
     // @Inject(HashingProvider)
     private hashingProvider: HashingProvider,
   ) { }
 
+  private async getTenantPrisma(): Promise<PrismaClient> {
+    return await this.tenantService.getPrismaClient();
+  }
+
   public async findOneByEmailWithPassword(email: string): Promise<User> {
-    const user = await this.prisma.user.findUnique({
+    const prisma = await this.getTenantPrisma();
+    const user = await prisma.user.findUnique({
       where: {
         email,
       },

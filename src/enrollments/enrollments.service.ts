@@ -1,24 +1,33 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { TenantService } from '../common/services/tenant.service';
+import { PrismaClient } from 'generated/prisma';
 import { getFullUrl } from 'src/common/helpers/helper';
 
 @Injectable()
 export class EnrollmentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private tenantService: TenantService) {}
+
+  private async getTenantPrisma(): Promise<PrismaClient> {
+    return await this.tenantService.getPrismaClient();
+  }
 
   async enroll(userId: string, courseId: string) {
-    const existed = await this.prisma.enrollment.findUnique({
+    const prisma = await this.getTenantPrisma();
+    
+    const existed = await prisma.enrollment.findUnique({
       where: { user_id_product_id: { user_id: userId, product_id: courseId } },
     });
     if (existed) throw new ConflictException('Already enrolled');
-    return this.prisma.enrollment.create({
+    return prisma.enrollment.create({
       data: { user_id: userId, product_id: courseId },
     });
   }
 
   async getMyEnrollments(userId: string, status?: string) {
+    const prisma = await this.getTenantPrisma();
+    
     // Lấy danh sách khóa học đã đăng ký
-    const enrollments = await this.prisma.enrollment.findMany({
+    const enrollments = await prisma.enrollment.findMany({
       where: { user_id: userId },
       include: { 
         product: {
@@ -47,7 +56,7 @@ export class EnrollmentsService {
         );
 
         // Đếm số bài học đã hoàn thành
-        const completedLessons = await this.prisma.userLessonProgress.count({
+        const completedLessons = await prisma.userLessonProgress.count({
           where: {
             user_id: userId,
             lesson: {
@@ -65,7 +74,7 @@ export class EnrollmentsService {
           : 0;
 
         // Kiểm tra trạng thái hoàn thành khóa học
-        const courseProgress = await this.prisma.userCourseProgress.findUnique({
+        const courseProgress = await prisma.userCourseProgress.findUnique({
           where: { user_id_product_id: { user_id: userId, product_id: product.id } }
         });
         const isCompleted = !!(courseProgress && courseProgress.completed_at);

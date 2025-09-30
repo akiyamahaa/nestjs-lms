@@ -1,12 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { TenantService } from '../common/services/tenant.service';
+import { PrismaClient } from 'generated/prisma';
 import { getFullUrl } from '../common/helpers/helper';
 
 @Injectable()
 export class AdminDashboardService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private tenantService: TenantService) {}
+
+  private async getTenantPrisma(): Promise<PrismaClient> {
+    return await this.tenantService.getPrismaClient();
+  }
 
   async getDashboardStats() {
+    const prisma = await this.getTenantPrisma();
+    
     // Lấy ngày đầu tháng hiện tại
     const startOfMonth = new Date();
     startOfMonth.setDate(1);
@@ -53,10 +60,10 @@ export class AdminDashboardService {
       
     ] = await Promise.all([
       // Tổng khóa học
-      this.prisma.product.count({
+      prisma.product.count({
         where: { deleted_at: null }
       }),
-      this.prisma.product.count({
+      prisma.product.count({
         where: { 
           deleted_at: null,
           created_at: { lt: startOfMonth }
@@ -64,23 +71,23 @@ export class AdminDashboardService {
       }),
       
       // Tổng khách hàng
-      this.prisma.user.count(),
-      this.prisma.user.count({
+      prisma.user.count(),
+      prisma.user.count({
         where: {
           createdAt: { lt: startOfMonth }
         }
       }),
       
       // Tổng đăng ký
-      this.prisma.enrollment.count(),
-      this.prisma.enrollment.count({
+      prisma.enrollment.count(),
+      prisma.enrollment.count({
         where: {
           created_at: { lt: startOfMonth }
         }
       }),
       
       // Đăng ký mới hôm nay
-      this.prisma.enrollment.count({
+      prisma.enrollment.count({
         where: {
           created_at: {
             gte: startOfToday,
@@ -90,31 +97,31 @@ export class AdminDashboardService {
       }),
       
       // Giá trung bình khóa học (bỏ qua vì không có trường price)
-      // this.prisma.product.aggregate({
+      // prisma.product.aggregate({
       //   _avg: { price: true },
       //   where: { deleted_at: null }
       // }),
       
       // Đánh giá
-      this.prisma.review.count(),
-      this.prisma.review.count({
+      prisma.review.count(),
+      prisma.review.count({
         where: {
           created_at: { lt: startOfMonth }
         }
       }),
-      this.prisma.review.aggregate({
+      prisma.review.aggregate({
         _avg: { rating: true }
       }),
       
       // Chi tiết khóa học theo status
-      this.prisma.product.groupBy({
+      prisma.product.groupBy({
         by: ['status'],
         _count: { status: true },
         where: { deleted_at: null }
       }),
       
       // Đăng ký gần đây
-      this.prisma.enrollment.findMany({
+      prisma.enrollment.findMany({
         take: 5,
         orderBy: { created_at: 'desc' },
         include: {
@@ -136,7 +143,7 @@ export class AdminDashboardService {
       }),
       
       // Top khóa học được đánh giá cao
-      this.prisma.product.findMany({
+      prisma.product.findMany({
         take: 5,
         where: { 
           deleted_at: null,
@@ -235,8 +242,10 @@ export class AdminDashboardService {
   }
 
   async getTopUsersByScore(limit: number = 5) {
+    const prisma = await this.getTenantPrisma();
+    
     // Lấy điểm từ challenges
-    const challengeScores = await this.prisma.challengeScore.groupBy({
+    const challengeScores = await prisma.challengeScore.groupBy({
       by: ['user_id'],
       _sum: {
         score: true
@@ -244,7 +253,7 @@ export class AdminDashboardService {
     });
 
     // Lấy điểm từ lessons
-    const lessonScores = await this.prisma.userLessonScore.groupBy({
+    const lessonScores = await prisma.userLessonScore.groupBy({
       by: ['userId'],
       _sum: {
         score: true
@@ -274,7 +283,7 @@ export class AdminDashboardService {
 
     // Lấy thông tin user
     const userIds = sortedUsers.map(([userId]) => userId);
-    const users = await this.prisma.user.findMany({
+    const users = await prisma.user.findMany({
       where: {
         id: { in: userIds }
       },
