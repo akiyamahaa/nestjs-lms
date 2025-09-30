@@ -1,23 +1,30 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { TenantService } from '../common/services/tenant.service';
+import { PrismaClient } from 'generated/prisma';
 import { getFullUrl } from '../common/helpers/helper';
 
 @Injectable()
 export class ScoresService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private tenantService: TenantService) {}
+
+  private async getTenantPrisma(): Promise<PrismaClient> {
+    return await this.tenantService.getPrismaClient();
+  }
 
   /**
    * Lấy điểm chi tiết của user (tổng + chia theo từng loại)
    */
   async getUserDetailedScore(userId: string) {
+    const prisma = await this.getTenantPrisma();
+    
     // Tổng điểm từ lessons
-    const lessonScoreSum = await this.prisma.userLessonScore.aggregate({
+    const lessonScoreSum = await prisma.userLessonScore.aggregate({
       where: { userId },
       _sum: { score: true },
     });
 
     // Điểm từ challenges theo từng loại
-    const challengeScores = await this.prisma.challengeScore.findMany({
+    const challengeScores = await prisma.challengeScore.findMany({
       where: { user_id: userId },
       include: {
         challenge: {
@@ -60,6 +67,8 @@ export class ScoresService {
    * Bảng xếp hạng tổng điểm
    */
   async getLeaderboard(limit: number = 10, grade?: string) {
+    const prisma = await this.getTenantPrisma();
+    
     let query = `
       SELECT 
         u.id,
@@ -93,7 +102,7 @@ export class ScoresService {
 
     query += ` ORDER BY total_score DESC LIMIT ${limit}`;
 
-    const leaderboard = await this.prisma.$queryRawUnsafe(query);
+    const leaderboard = await prisma.$queryRawUnsafe(query);
     
     // Convert avatar paths to full URLs
     const leaderboardWithFullUrls = (leaderboard as any[]).map(user => ({
@@ -108,7 +117,9 @@ export class ScoresService {
    * Lấy thứ hạng của user
    */
   async getUserRank(userId: string) {
-    // Tổng điểm của user
+    const prisma = await this.getTenantPrisma();
+    
+    // Tính tổng điểm của user hiện tại
     const userScore = await this.getUserDetailedScore(userId);
 
     // Đếm số user có điểm cao hơn
@@ -137,7 +148,7 @@ export class ScoresService {
       ) higher_scores
     `;
 
-    const higherScoreCount = await this.prisma.$queryRawUnsafe(query);
+    const higherScoreCount = await prisma.$queryRawUnsafe(query);
     const rank = Number((higherScoreCount as any)[0].count) + 1;
 
     return {

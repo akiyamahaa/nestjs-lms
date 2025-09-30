@@ -2,7 +2,6 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { setupSwagger } from './common/swagger/swagger.config';
-import { TenantMiddleware } from './middlewares/tenant.middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -23,8 +22,6 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true, // Nếu dùng cookie, JWT trong header
   });
-
-  app.use(new TenantMiddleware().use);
 
   // ✅ Setup Swagger
   const port = parseInt(process.env.PORT ?? '5005', 10);

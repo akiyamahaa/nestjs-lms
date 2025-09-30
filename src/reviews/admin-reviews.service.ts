@@ -1,15 +1,21 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { TenantService } from '../common/services/tenant.service';
 import { AdminReviewQueryDto } from './dto/admin-review-query.dto';
 import { UpdateReviewStatusDto } from './dto/update-review-status.dto';
-import { Prisma } from 'generated/prisma';
+import { Prisma, PrismaClient } from 'generated/prisma';
 import { getFullUrl } from '../common/helpers/helper';
 
 @Injectable()
 export class AdminReviewsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private tenantService: TenantService) {}
+
+  private async getTenantPrisma(): Promise<PrismaClient> {
+    return await this.tenantService.getPrismaClient();
+  }
 
   async findAll(query: AdminReviewQueryDto) {
+    const prisma = await this.getTenantPrisma();
+    
     const { 
       page = 1, 
       limit = 10, 
@@ -58,10 +64,10 @@ export class AdminReviewsService {
     };
 
     // Get total count
-    const total = await this.prisma.review.count({ where });
+    const total = await prisma.review.count({ where });
 
     // Get reviews with pagination
-    const reviews = await this.prisma.review.findMany({
+    const reviews = await prisma.review.findMany({
       where,
       include: {
         user: {
@@ -108,27 +114,23 @@ export class AdminReviewsService {
   }
 
   async getStats() {
-    const [
-      total,
-      approved,
-      rejected,
-      averageRating,
-      ratingDistribution
-    ] = await Promise.all([
-      this.prisma.review.count(),
-      this.prisma.review.count({ where: { status: true } }),
-      this.prisma.review.count({ where: { status: false } }),
-      this.prisma.review.aggregate({
+    const prisma = await this.getTenantPrisma();
+    
+    const [total, published, hidden, avgRating, ratingBreakdown] = await Promise.all([
+      prisma.review.count(),
+      prisma.review.count({ where: { status: true } }),
+      prisma.review.count({ where: { status: false } }),
+      prisma.review.aggregate({
         _avg: { rating: true }
       }),
-      this.prisma.review.groupBy({
+      prisma.review.groupBy({
         by: ['rating'],
         _count: { rating: true },
         orderBy: { rating: 'asc' }
       })
     ]);
 
-    const recentReviews = await this.prisma.review.findMany({
+    const recentReviews = await prisma.review.findMany({
       take: 5,
       orderBy: { created_at: 'desc' },
       include: {
@@ -152,16 +154,16 @@ export class AdminReviewsService {
     const ratings = {
       1: 0, 2: 0, 3: 0, 4: 0, 5: 0
     };
-    ratingDistribution.forEach(item => {
+    ratingBreakdown.forEach(item => {
       ratings[item.rating] = item._count.rating;
     });
 
     return {
       total,
-      approved,
+      published,
       pending: 0, // Since status is not nullable in schema
-      rejected,
-      averageRating: averageRating._avg.rating || 0,
+      hidden,
+      averageRating: avgRating._avg.rating || 0,
       ratingDistribution: ratings,
       recentReviews: recentReviews.map(review => ({
         ...review,
@@ -174,7 +176,9 @@ export class AdminReviewsService {
   }
 
   async findOne(id: string) {
-    const review = await this.prisma.review.findUnique({
+    const prisma = await this.getTenantPrisma();
+    
+    const review = await prisma.review.findUnique({
       where: { id },
       include: {
         user: {
@@ -215,12 +219,14 @@ export class AdminReviewsService {
   }
 
   async updateStatus(id: string, updateStatusDto: UpdateReviewStatusDto) {
-    const review = await this.prisma.review.findUnique({ where: { id } });
+    const prisma = await this.getTenantPrisma();
+    
+    const review = await prisma.review.findUnique({ where: { id } });
     if (!review) {
       throw new NotFoundException('Review not found');
     }
 
-    return this.prisma.review.update({
+    return prisma.review.update({
       where: { id },
       data: {
         status: updateStatusDto.status
@@ -244,22 +250,26 @@ export class AdminReviewsService {
   }
 
   async remove(id: string) {
-    const review = await this.prisma.review.findUnique({ where: { id } });
+    const prisma = await this.getTenantPrisma();
+    
+    const review = await prisma.review.findUnique({ where: { id } });
     if (!review) {
       throw new NotFoundException('Review not found');
     }
 
-    return this.prisma.review.delete({ where: { id } });
+    return prisma.review.delete({ where: { id } });
   }
 
   async getProductReviews(productId: string, query: AdminReviewQueryDto) {
+    const prisma = await this.getTenantPrisma();
+    
     const { page = 1, limit = 10, sort_by = 'created_at', sort_order = 'desc' } = query;
     const skip = (page - 1) * limit;
 
     const where = { product_id: productId };
-    const total = await this.prisma.review.count({ where });
+    const total = await prisma.review.count({ where });
 
-    const reviews = await this.prisma.review.findMany({
+    const reviews = await prisma.review.findMany({
       where,
       include: {
         user: {
@@ -294,13 +304,15 @@ export class AdminReviewsService {
   }
 
   async getUserReviews(userId: string, query: AdminReviewQueryDto) {
+    const prisma = await this.getTenantPrisma();
+    
     const { page = 1, limit = 10, sort_by = 'created_at', sort_order = 'desc' } = query;
     const skip = (page - 1) * limit;
 
     const where = { user_id: userId };
-    const total = await this.prisma.review.count({ where });
+    const total = await prisma.review.count({ where });
 
-    const reviews = await this.prisma.review.findMany({
+    const reviews = await prisma.review.findMany({
       where,
       include: {
         product: {

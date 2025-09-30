@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
+import { TenantService } from '../../common/services/tenant.service';
+import { PrismaClient } from 'generated/prisma';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { CategoryStatus } from './enums/category-status.enum';
@@ -7,14 +8,20 @@ import { getFullUrl } from '../../common/helpers/helper';
 
 @Injectable()
 export class AdminCategoriesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private tenantService: TenantService) {}
+
+  private async getTenantPrisma(): Promise<PrismaClient> {
+    return await this.tenantService.getPrismaClient();
+  }
 
   async create(data: CreateCategoryDto) {
+    const prisma = await this.getTenantPrisma();
+    
     // Tạo slug tự động nếu không được cung cấp
     const slug = data.slug || this.generateSlug(data.title);
 
     // Kiểm tra slug đã tồn tại chưa
-    const existingCategory = await this.prisma.category.findUnique({
+    const existingCategory = await prisma.category.findUnique({
       where: { slug }
     });
 
@@ -22,7 +29,7 @@ export class AdminCategoriesService {
       throw new ConflictException('Slug đã tồn tại');
     }
 
-    return this.prisma.category.create({ 
+    return prisma.category.create({ 
       data: {
         title: data.title,
         slug,
@@ -42,6 +49,8 @@ export class AdminCategoriesService {
   }
 
   async findAll(page = 1, limit = 10, search?: string, status?: CategoryStatus) {
+    const prisma = await this.getTenantPrisma();
+    
     const skip = (page - 1) * limit;
     const where: any = { deleted_at: null };
 
@@ -57,7 +66,7 @@ export class AdminCategoriesService {
     }
 
     const [categories, total] = await Promise.all([
-      this.prisma.category.findMany({
+      prisma.category.findMany({
         where,
         skip,
         take: limit,
@@ -70,7 +79,7 @@ export class AdminCategoriesService {
           }
         }
       }),
-      this.prisma.category.count({ where })
+      prisma.category.count({ where })
     ]);
 
     return {
@@ -85,12 +94,14 @@ export class AdminCategoriesService {
   }
 
   async getStats() {
+    const prisma = await this.getTenantPrisma();
+    
     const [total, published, draft, archived, withProducts] = await Promise.all([
-      this.prisma.category.count({ where: { deleted_at: null } }),
-      this.prisma.category.count({ where: { deleted_at: null, status: 'published' } }),
-      this.prisma.category.count({ where: { deleted_at: null, status: 'draft' } }),
-      this.prisma.category.count({ where: { deleted_at: null, status: 'archived' } }),
-      this.prisma.category.count({ 
+      prisma.category.count({ where: { deleted_at: null } }),
+      prisma.category.count({ where: { deleted_at: null, status: 'published' } }),
+      prisma.category.count({ where: { deleted_at: null, status: 'draft' } }),
+      prisma.category.count({ where: { deleted_at: null, status: 'archived' } }),
+      prisma.category.count({ 
         where: { 
           deleted_at: null,
           products: {
@@ -111,7 +122,9 @@ export class AdminCategoriesService {
   }
 
   async findOne(id: string) {
-    const category = await this.prisma.category.findUnique({
+    const prisma = await this.getTenantPrisma();
+    
+    const category = await prisma.category.findUnique({
       where: { id },
       include: {
         products: {
@@ -139,7 +152,9 @@ export class AdminCategoriesService {
   }
 
   async update(id: string, data: UpdateCategoryDto) {
-    const category = await this.prisma.category.findUnique({ where: { id } });
+    const prisma = await this.getTenantPrisma();
+    
+    const category = await prisma.category.findUnique({ where: { id } });
     
     if (!category || category.deleted_at) {
       throw new NotFoundException('Category not found');
@@ -158,7 +173,7 @@ export class AdminCategoriesService {
       
       // Kiểm tra slug nếu có thay đổi
       if (slugToUpdate !== category.slug) {
-        const existingCategory = await this.prisma.category.findUnique({
+        const existingCategory = await prisma.category.findUnique({
           where: { slug: slugToUpdate }
         });
 
@@ -172,14 +187,16 @@ export class AdminCategoriesService {
 
     updateData.updated_at = new Date();
 
-    return this.prisma.category.update({
+    return prisma.category.update({
       where: { id },
       data: updateData,
     });
   }
 
   async remove(id: string) {
-    const category = await this.prisma.category.findUnique({ 
+    const prisma = await this.getTenantPrisma();
+    
+    const category = await prisma.category.findUnique({ 
       where: { id },
       include: {
         _count: {
@@ -200,14 +217,16 @@ export class AdminCategoriesService {
     }
 
     // Soft-delete
-    return this.prisma.category.update({
+    return prisma.category.update({
       where: { id },
       data: { deleted_at: new Date() },
     });
   }
 
   async restore(id: string) {
-    const category = await this.prisma.category.findUnique({ where: { id } });
+    const prisma = await this.getTenantPrisma();
+    
+    const category = await prisma.category.findUnique({ where: { id } });
     
     if (!category) {
       throw new NotFoundException('Category not found');
@@ -217,7 +236,7 @@ export class AdminCategoriesService {
       throw new ConflictException('Category is not deleted');
     }
 
-    return this.prisma.category.update({
+    return prisma.category.update({
       where: { id },
       data: { 
         deleted_at: null,
@@ -227,11 +246,13 @@ export class AdminCategoriesService {
   }
 
   async getDeleted(page = 1, limit = 10) {
+    const prisma = await this.getTenantPrisma();
+    
     const skip = (page - 1) * limit;
     const where = { deleted_at: { not: null } };
 
     const [categories, total] = await Promise.all([
-      this.prisma.category.findMany({
+      prisma.category.findMany({
         where,
         skip,
         take: limit,
@@ -244,7 +265,7 @@ export class AdminCategoriesService {
           }
         }
       }),
-      this.prisma.category.count({ where })
+      prisma.category.count({ where })
     ]);
 
     return {
@@ -259,9 +280,12 @@ export class AdminCategoriesService {
   }
 
   async changeStatus(id: string, status: CategoryStatus) {
-    const category = await this.prisma.category.findUnique({ where: { id } });
+    const prisma = await this.getTenantPrisma();
+    
+    const category = await prisma.category.findUnique({ where: { id } });
     if (!category || category.deleted_at) throw new NotFoundException('Category not found');
-    return this.prisma.category.update({
+    
+    return prisma.category.update({
       where: { id },
       data: { status, updated_at: new Date() },
     });

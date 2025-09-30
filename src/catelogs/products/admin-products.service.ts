@@ -1,16 +1,22 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
+import { TenantService } from '../../common/services/tenant.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { AdminProductQueryDto } from './dto/admin-product-query.dto';
-import { LessonType, ProductStatus, LessonStatus, ModuleStatus, Prisma } from 'generated/prisma';
+import { LessonType, ProductStatus, LessonStatus, ModuleStatus, Prisma, PrismaClient } from 'generated/prisma';
 import { getFullUrl } from '../../common/helpers/helper';
 
 @Injectable()
 export class AdminProductsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private tenantService: TenantService) {}
+
+  private async getTenantPrisma(): Promise<PrismaClient> {
+    return await this.tenantService.getPrismaClient();
+  }
 
   async findAll(query: AdminProductQueryDto) {
+    const prisma = await this.getTenantPrisma();
+    
     const { page = 1, limit = 10, search, category_id, status, sort_by = 'created_at', sort_order = 'desc' } = query;
     const skip = (page - 1) * limit;
 
@@ -30,10 +36,10 @@ export class AdminProductsService {
     };
 
     // Get total count
-    const total = await this.prisma.product.count({ where });
+    const total = await prisma.product.count({ where });
 
     // Get products with pagination
-    const products = await this.prisma.product.findMany({
+    const products = await prisma.product.findMany({
       where,
       include: {
         category: {
@@ -116,12 +122,14 @@ export class AdminProductsService {
   }
 
   async getStats() {
+    const prisma = await this.getTenantPrisma();
+    
     const [total, published, draft, archived, withEnrollments] = await Promise.all([
-      this.prisma.product.count({ where: { deleted_at: null } }),
-      this.prisma.product.count({ where: { deleted_at: null, status: 'published' } }),
-      this.prisma.product.count({ where: { deleted_at: null, status: 'draft' } }),
-      this.prisma.product.count({ where: { deleted_at: null, status: 'archived' } }),
-      this.prisma.product.count({ 
+      prisma.product.count({ where: { deleted_at: null } }),
+      prisma.product.count({ where: { deleted_at: null, status: 'published' } }),
+      prisma.product.count({ where: { deleted_at: null, status: 'draft' } }),
+      prisma.product.count({ where: { deleted_at: null, status: 'archived' } }),
+      prisma.product.count({ 
         where: { 
           deleted_at: null,
           enrollments: {
@@ -131,7 +139,7 @@ export class AdminProductsService {
       })
     ]);
 
-    const recentProducts = await this.prisma.product.findMany({
+    const recentProducts = await prisma.product.findMany({
       where: { deleted_at: null },
       take: 5,
       orderBy: { created_at: 'desc' },
@@ -160,7 +168,9 @@ export class AdminProductsService {
   }
 
   async findOne(id: string) {
-    const product = await this.prisma.product.findUnique({
+    const prisma = await this.getTenantPrisma();
+    
+    const product = await prisma.product.findUnique({
       where: { id },
       include: { 
         category: {
@@ -214,6 +224,8 @@ export class AdminProductsService {
   }
 
   async create(data: CreateProductDto) {
+    const prisma = await this.getTenantPrisma();
+    
     const { modules, ...productData } = data;
     
     // Always generate unique slug, even if slug is provided
@@ -222,7 +234,7 @@ export class AdminProductsService {
     }
 
     try {
-      return await this.prisma.product.create({
+      return await prisma.product.create({
         data: {
           ...productData,
           modules: modules && modules.length > 0
@@ -293,7 +305,7 @@ export class AdminProductsService {
       // If still get unique constraint error, try with a timestamp suffix
       if (error.code === 'P2002' && error.meta?.target?.includes('slug')) {
         productData.slug = `${productData.slug}-${Date.now()}`;
-        return this.prisma.product.create({
+        return prisma.product.create({
           data: {
             ...productData,
             modules: modules && modules.length > 0
@@ -366,6 +378,8 @@ export class AdminProductsService {
   }
 
   async update(id: string, data: Partial<CreateProductDto>) {
+    const prisma = await this.getTenantPrisma();
+    
     const { modules, ...productData } = data;
 
     // Generate unique slug if title is updated and no slug provided
@@ -375,7 +389,7 @@ export class AdminProductsService {
 
     if (modules && Array.isArray(modules)) {
       // Xóa quiz_answers trước
-      await this.prisma.quizAnswer.deleteMany({
+      await prisma.quizAnswer.deleteMany({
         where: {
           quiz_question: {
             lesson: {
@@ -387,7 +401,7 @@ export class AdminProductsService {
         },
       });
       // Xóa quiz_questions
-      await this.prisma.quizQuestion.deleteMany({
+      await prisma.quizQuestion.deleteMany({
         where: {
           lesson: {
             module: {
@@ -397,7 +411,7 @@ export class AdminProductsService {
         },
       });
       // Xóa lessons
-      await this.prisma.lesson.deleteMany({
+      await prisma.lesson.deleteMany({
         where: {
           module: {
             course_id: id,
@@ -405,11 +419,11 @@ export class AdminProductsService {
         },
       });
       // Xóa modules
-      await this.prisma.module.deleteMany({
+      await prisma.module.deleteMany({
         where: { course_id: id },
       });
 
-      return this.prisma.product.update({
+      return prisma.product.update({
         where: { id },
         data: {
           ...productData,
@@ -478,7 +492,7 @@ export class AdminProductsService {
       });
     }
 
-    return this.prisma.product.update({
+    return prisma.product.update({
       where: { id },
       data: {
         ...productData,
@@ -489,9 +503,11 @@ export class AdminProductsService {
   }
 
   async remove(id: string) {
-    const product = await this.prisma.product.findUnique({ where: { id } });
+    const prisma = await this.getTenantPrisma();
+    
+    const product = await prisma.product.findUnique({ where: { id } });
     if (!product || product.deleted_at) throw new NotFoundException('Product not found');
-    return this.prisma.product.update({
+    return prisma.product.update({
       where: { id },
       data: { deleted_at: new Date() },
     });
@@ -510,6 +526,8 @@ export class AdminProductsService {
   }
 
   private async generateUniqueSlug(title: string, excludeId?: string): Promise<string> {
+    const prisma = await this.getTenantPrisma();
+    
     let slug = this.generateSlug(title);
     
     // If slug is empty after processing, use a default
@@ -525,7 +543,7 @@ export class AdminProductsService {
     let attempts = 0;
 
     while (attempts < maxAttempts) {
-      const existingProduct = await this.prisma.product.findFirst({
+      const existingProduct = await prisma.product.findFirst({
         where: {
           slug: uniqueSlug,
           deleted_at: null,

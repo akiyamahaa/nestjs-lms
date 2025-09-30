@@ -1,0 +1,160 @@
+[
+  {
+    "title": "Khóa học JavaScript cơ bản",
+    "slug": "khoa-hoc-javascript-co-ban",
+    "short_description": "Học JavaScript từ cơ bản đến nâng cao cho người mới bắt đầu",
+    "description": "Khóa học này sẽ giúp bạn nắm vững các kiến thức cơ bản về JavaScript, từ cú pháp, biến, hàm cho đến DOM manipulation và ES6+.",
+    "category_id": "uuid-category-1",
+    "thumbnail": "uploads/products/javascript-course.jpg",
+    "label": "new",
+    "status": "published",
+    "requirements": "Kiến thức cơ bản về HTML và CSS",
+    "learning_outcomes": "Nắm vững cú pháp JavaScript, Làm việc với DOM, Hiểu về ES6+",
+    "preview_video": "https://example.com/preview1.mp4",
+    "modules": [
+      {
+        "title": "Giới thiệu JavaScript",
+        "short_description": "Tìm hiểu về JavaScript và cách thiết lập môi trường",
+        "order": 1,
+        "status": "published",
+        "lessons": [
+          {
+            "title": "JavaScript là gì?",
+            "description": "Tổng quan về JavaScript và vai trò trong web development",
+            "type": "video",
+            "is_previewable": true,
+            "status": "published",
+            "order": 1,
+            "attachment": "uploads/lessons/js-intro.mp4"
+          },
+          {
+            "title": "Thiết lập môi trường phát triển",
+            "description": "Hướng dẫn cài đặt và cấu hình môi trường coding",
+            "type": "content",
+            "is_previewable": false,
+            "status": "published",
+            "order": 2,
+            "attachment": null
+          },
+          {
+            "title": "Kiểm tra kiến thức cơ bản",
+            "description": "Quiz kiểm tra hiểu biết về JavaScript",
+            "type": "quiz",
+            "is_previewable": false,
+            "status": "published",
+            "order": 3,
+            "attachment": null,
+            "questions": [
+              {
+                "question": "JavaScript được phát triển bởi công ty nào?",
+                "explanation": "JavaScript được tạo ra bởi Brendan Eich tại Netscape",
+                "answers": [
+                  { "answer": "Microsoft", "is_correct": false },
+                  { "answer": "Netscape", "is_correct": true },
+                  { "answer": "Google", "is_correct": false },
+                  { "answer": "Apple", "is_correct": false }
+                ]
+              },
+              {
+                "question": "JavaScript có phải là ngôn ngữ compiled không?",
+                "explanation": "JavaScript là ngôn ngữ interpreted, chạy trực tiếp trên trình duyệt",
+                "answers": [
+                  { "answer": "Có", "is_correct": false },
+                  { "answer": "Không", "is_correct": true }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "title": "Cú pháp cơ bản",
+        "short_description": "Học về biến, kiểu dữ liệu và toán tử",
+        "order": 2,
+        "status": "published",
+        "lessons": [
+          {
+            "title": "Biến và kiểu dữ liệu",
+            "description": "Cách khai báo biến và các kiểu dữ liệu trong JavaScript",
+            "type": "video",
+            "is_previewable": false,
+            "status": "published",
+            "order": 1,
+            "attachment": "uploads/lessons/js-variables.mp4"
+          },
+          {
+            "title": "Toán tử và biểu thức",
+            "description": "Tìm hiểu các toán tử số học, so sánh và logic",
+            "type": "content",
+            "is_previewable": false,
+            "status": "published",
+            "order": 2,
+            "attachment": null
+          },
+          {
+            "title": "Bài tập về biến và toán tử",
+            "description": "Thực hành với biến và các toán tử",
+            "type": "quiz",
+            "is_previewable": false,
+            "status": "published",
+            "order": 3,
+            "attachment": null,
+            "questions": [
+              {
+                "question": "Kết quả của biểu thức '5' + 3 trong JavaScript là gì?",
+                "explanation": "Khi cộng string với number, JavaScript sẽ convert number thành string và nối chuỗi",
+                "answers": [
+                  { "answer": "8", "is_correct": false },
+                  { "answer": "'53'", "is_correct": true },
+                  { "answer": "NaN", "is_correct": false },
+                  { "answer": "Error", "is_correct": false }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Khóa học React cho người mới",
+    "slug": "khoa-hoc-react-cho-nguoi-moi",
+    "short_description": "Xây dựng ứng dụng web hiện đại với React",
+    "description": "Học cách xây dựng ứng dụng web single-page với React, bao gồm components, state, props, hooks và nhiều tính năng khác.",
+    "category_id": "uuid-category-2", 
+    "thumbnail": "uploads/products/react-course.jpg",
+    "label": "hot",
+    "status": "published",
+    "requirements": "Biết JavaScript cơ bản, HTML, CSS",
+    "learning_outcomes": "Xây dựng được ứng dụng React, Hiểu về components và hooks, Quản lý state hiệu quả",
+    "preview_video": "https://example.com/preview2.mp4",
+    "modules": [
+      {
+        "title": "React Fundamentals",
+        "short_description": "Những khái niệm cơ bản của React",
+        "order": 1,
+        "status": "published",
+        "lessons": [
+          {
+            "title": "Giới thiệu React",
+            "description": "React là gì và tại sao nên sử dụng React",
+            "type": "video",
+            "is_previewable": true,
+            "status": "published",
+            "order": 1,
+            "attachment": "uploads/lessons/react-intro.mp4"
+          },
+          {
+            "title": "JSX và Components",
+            "description": "Tìm hiểu về JSX syntax và cách tạo components",
+            "type": "content",
+            "is_previewable": false,
+            "status": "published",
+            "order": 2,
+            "attachment": null
+          }
+        ]
+      }
+    ]
+  }
+]

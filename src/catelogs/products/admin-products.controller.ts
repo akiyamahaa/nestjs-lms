@@ -34,13 +34,18 @@ import { storage } from 'src/cloudinary/cloudinary.storage';
 import { validateOrReject } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
 import { AuthGuard } from '@nestjs/passport';
+import { ProductsService } from './products.service';
+import { diskStorage } from 'multer';
 
 @ApiTags('Admin - Products')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
 @Controller('admin/products')
 export class AdminProductsController {
-  constructor(private readonly productsService: AdminProductsService) { }
+  constructor(
+    private readonly productsService: AdminProductsService,
+    private readonly productsImportService: ProductsService
+  ) { }
 
   @ApiOperation({ 
     summary: 'Lấy danh sách sản phẩm với phân trang và tìm kiếm',
@@ -208,5 +213,79 @@ export class AdminProductsController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.productsService.remove(id);
+  }
+
+  @ApiOperation({ 
+    summary: 'Import products từ file JSON',
+    description: 'Upload file JSON để import products, modules, lessons và quiz questions'
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'File JSON chứa dữ liệu products'
+        }
+      },
+      required: ['file']
+    }
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Import thành công',
+    schema: {
+      type: 'object',
+      properties: {
+        count: { type: 'number', description: 'Số lượng products đã import' },
+        message: { type: 'string', description: 'Thông báo kết quả' }
+      }
+    }
+  })
+  @Post('import')
+  @UseInterceptors(FileInterceptor('file', {
+    storage: diskStorage({
+      destination: './uploads/temp',
+      filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, `products-${uniqueSuffix}.json`);
+      }
+    }),
+    fileFilter: (req, file, cb) => {
+      if (file.mimetype !== 'application/json') {
+        return cb(new BadRequestException('Only JSON files are allowed'), false);
+      }
+      cb(null, true);
+    },
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB
+    }
+  }))
+  async importProducts(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+
+    try {
+      const result = await this.productsImportService.importProductsFromJson(file.path);
+      
+      // Xóa file tạm sau khi import xong
+      const fs = require('fs');
+      if (fs.existsSync(file.path)) {
+        fs.unlinkSync(file.path);
+      }
+      
+      return result;
+    } catch (error) {
+      // Xóa file tạm nếu có lỗi
+      const fs = require('fs');
+      if (fs.existsSync(file.path)) {
+        fs.unlinkSync(file.path);
+      }
+      
+      throw new BadRequestException(`Import failed: ${error.message}`);
+    }
   }
 }

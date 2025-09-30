@@ -5,10 +5,11 @@ import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { ProductsController } from './products.controller';
 import { ProductsService } from './products.service';
+import { TenantService } from '../../common/services/tenant.service';
 
 @Module({
   controllers: [AdminProductsController, ProductsController],
-  providers: [AdminProductsService, ProductsService],
+  providers: [AdminProductsService, ProductsService, TenantService],
   imports: [
     MulterModule.register({
       storage: diskStorage({

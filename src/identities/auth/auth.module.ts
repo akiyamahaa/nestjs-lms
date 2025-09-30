@@ -12,6 +12,7 @@ import { HashingProvider } from './providers/hashing.provider';
 import { BcryptProvider } from './providers/bcrypt.provider';
 import { VerificationsModule } from '../verifications/verifications.module';
 import { EmailModule } from 'src/common/modules/email/email.module';
+import { TenantService } from 'src/common/services/tenant.service';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { EmailModule } from 'src/common/modules/email/email.module';
     JwtStrategy,
     JwtAuthGuard,
     AuthService,
+    TenantService,
     {
       provide: HashingProvider,
       useClass: BcryptProvider,
