@@ -1,6 +1,5 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { UserWithoutPassword } from 'src/identities/auth/interfaces/request-with-user.interface';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { TenantService } from 'src/common/services/tenant.service';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { HashingProvider } from 'src/identities/auth/providers/hashing.provider';
@@ -13,7 +12,6 @@ import { BadRequestException } from '@nestjs/common';
 @Injectable()
 export class UsersService {
   constructor(
-    private prisma: PrismaService,
     private tenantService: TenantService,
     // @Inject(HashingProvider)
     private hashingProvider: HashingProvider,
@@ -43,7 +41,8 @@ export class UsersService {
     if (!isUuid(userId)) {
       throw new BadRequestException('Invalid user ID format');
     }
-    const user = await this.prisma.user.findUnique({
+    const prisma = await this.getTenantPrisma();
+    const user = await prisma.user.findUnique({
       where: {
         id: userId,
       },
@@ -60,7 +59,8 @@ export class UsersService {
   }
 
   public async findOneByEmail(email: string): Promise<UserWithoutPassword> {
-    const user = await this.prisma.user.findUnique({
+    const prisma = await this.getTenantPrisma();
+    const user = await prisma.user.findUnique({
       where: {
         email,
       },
@@ -79,7 +79,8 @@ export class UsersService {
   public async createUser(
     createUserDto: CreateUserDto,
   ): Promise<UserWithoutPassword> {
-    const existingUser = await this.prisma.user.findUnique({
+    const prisma = await this.getTenantPrisma();
+    const existingUser = await prisma.user.findUnique({
       where: {
         email: createUserDto.email,
       },
@@ -90,7 +91,7 @@ export class UsersService {
     const hashedPassword = await this.hashingProvider.hashPassword(
       createUserDto.password,
     );
-    const newUser = await this.prisma.user.create({
+    const newUser = await prisma.user.create({
       data: {
         ...createUserDto,
         password: hashedPassword,
@@ -108,7 +109,8 @@ export class UsersService {
   }
 
   async editUser(userId: string, dto: EditUserDto) {
-    const user = await this.prisma.user.update({
+    const prisma = await this.getTenantPrisma();
+    const user = await prisma.user.update({
       where: {
         id: userId,
       },
@@ -124,7 +126,8 @@ export class UsersService {
   }
 
   async changePassword(userId: string, dto: ChangePasswordDto) {
-    const user = await this.prisma.user.findUnique({
+    const prisma = await this.getTenantPrisma();
+    const user = await prisma.user.findUnique({
       where: { id: userId },
     });
 
@@ -145,7 +148,7 @@ export class UsersService {
     const newHash = await this.hashingProvider.hashPassword(dto.newPassword);
 
     // Update password in the database
-    await this.prisma.user.update({
+    await prisma.user.update({
       where: { id: userId },
       data: { password: newHash },
     });
@@ -156,7 +159,8 @@ export class UsersService {
   public async createUserWithoutOtp(
     dto: CreateUserDto,
   ): Promise<UserWithoutPassword> {
-    const existingUser = await this.prisma.user.findUnique({
+    const prisma = await this.getTenantPrisma();
+    const existingUser = await prisma.user.findUnique({
       where: { email: dto.email },
     });
     if (existingUser) {
@@ -167,7 +171,7 @@ export class UsersService {
       dto.password,
     );
 
-    const user = await this.prisma.user.create({
+    const user = await prisma.user.create({
       data: {
         ...dto,
         password: hashedPassword,
@@ -189,8 +193,9 @@ export class UsersService {
     if (!file) {
       throw new ForbiddenException('File is required');
     }
+    const prisma = await this.getTenantPrisma();
     const baseUrl = process.env.BASE_URL;
-    const user = await this.prisma.user.update({
+    const user = await prisma.user.update({
       where: { id: userId },
       data: { avatar: file.path ? file.path.replace(/^.*\/image\/upload\//, '') : null },
     });
@@ -200,7 +205,8 @@ export class UsersService {
   }
 
   async getTotalScoreByUserId(userId: string): Promise<number> {
-    const result = await this.prisma.challengeScore.aggregate({
+    const prisma = await this.getTenantPrisma();
+    const result = await prisma.challengeScore.aggregate({
       where: { user_id: userId },
       _sum: { score: true },
     });
@@ -208,8 +214,9 @@ export class UsersService {
   }
 
   async getLessonStats(userId: string) {
+    const prisma = await this.getTenantPrisma();
     // 1. Lấy tất cả khóa học đã đăng ký
-    const enrollments = await this.prisma.enrollment.findMany({
+    const enrollments = await prisma.enrollment.findMany({
       where: { user_id: userId },
       select: { product_id: true },
     });
@@ -217,7 +224,7 @@ export class UsersService {
     const totalEnrolledCourses = enrolledCourseIds.length;
 
     // 2. Lấy khóa học đã hoàn thành
-    const completedCourses = await this.prisma.userCourseProgress.findMany({
+    const completedCourses = await prisma.userCourseProgress.findMany({
       where: {
         user_id: userId,
         product_id: { in: enrolledCourseIds },
@@ -238,8 +245,9 @@ export class UsersService {
   }
 
   async getCourseStats(userId: string) {
+    const prisma = await this.getTenantPrisma();
     // 1. Lấy tất cả khóa học đã đăng ký
-    const enrollments = await this.prisma.enrollment.findMany({
+    const enrollments = await prisma.enrollment.findMany({
       where: { user_id: userId },
       select: { product_id: true },
     });
@@ -247,7 +255,7 @@ export class UsersService {
     const totalEnrolledCourses = enrolledCourseIds.length;
 
     // 2. Lấy khóa học đã hoàn thành
-    const completedCourses = await this.prisma.userCourseProgress.findMany({
+    const completedCourses = await prisma.userCourseProgress.findMany({
       where: {
         user_id: userId,
         product_id: { in: enrolledCourseIds },

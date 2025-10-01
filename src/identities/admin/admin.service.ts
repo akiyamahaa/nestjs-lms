@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { TenantService } from 'src/common/services/tenant.service';
+import { PrismaClient } from 'generated/prisma';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { EditUserDto } from '../users/dto/edit-user.dto';
 import { HashingProvider } from '../auth/providers/hashing.provider';
@@ -7,11 +8,16 @@ import { HashingProvider } from '../auth/providers/hashing.provider';
 @Injectable()
 export class AdminService {
   constructor(
-    private prisma: PrismaService,
+    private readonly tenantService: TenantService,
     private hashingProvider: HashingProvider
   ) {}
 
+  private async getTenantPrisma(): Promise<PrismaClient> {
+    return await this.tenantService.getPrismaClient();
+  }
+
   async getAllUsers(role?: string, keyword?: string, page = 1, perPage = 10) {
+    const prisma = await this.getTenantPrisma();
     // Ensure page and perPage are positive integers
     page = Math.max(Number(page) || 1, 1);
     perPage = Math.max(Number(perPage) || 10, 1);
@@ -26,7 +32,7 @@ export class AdminService {
     }
 
     const [users, total] = await Promise.all([
-      this.prisma.user.findMany({
+      prisma.user.findMany({
         where,
         skip,
         take: perPage,
@@ -51,7 +57,7 @@ export class AdminService {
           }
         }
       }),
-      this.prisma.user.count({ where }),
+      prisma.user.count({ where }),
     ]);
 
     return {
@@ -68,7 +74,8 @@ export class AdminService {
       throw new NotFoundException(`Invalid ID: ${id}`);
     }
 
-    const user = await this.prisma.user.findUnique({
+    const prisma = await this.getTenantPrisma();
+    const user = await prisma.user.findUnique({
       where: { id },
       select: {
         id: true,
@@ -100,9 +107,10 @@ export class AdminService {
   }
 
   async createUser(dto: CreateUserDto) {
+    const prisma = await this.getTenantPrisma();
     const { email, password, fullName, role } = dto;
 
-    const existingUser = await this.prisma.user.findUnique({
+    const existingUser = await prisma.user.findUnique({
       where: { email },
     });
 
@@ -113,7 +121,7 @@ export class AdminService {
     // Hash password
     const hashedPassword = await this.hashingProvider.hashPassword(password);
 
-    const user = await this.prisma.user.create({
+    const user = await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
@@ -138,7 +146,8 @@ export class AdminService {
   }
 
   async editUser(id: string, dto: EditUserDto) {
-    const user = await this.prisma.user.findUnique({
+    const prisma = await this.getTenantPrisma();
+    const user = await prisma.user.findUnique({
       where: { id },
     });
 
@@ -146,7 +155,7 @@ export class AdminService {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
 
-    return this.prisma.user.update({
+    return prisma.user.update({
       where: { id },
       data: {
         ...dto,
@@ -168,7 +177,8 @@ export class AdminService {
   }
 
   async deleteUser(id: string) {
-    const user = await this.prisma.user.findUnique({
+    const prisma = await this.getTenantPrisma();
+    const user = await prisma.user.findUnique({
       where: { id },
     });
 
@@ -176,21 +186,22 @@ export class AdminService {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
 
-    return this.prisma.user.delete({
+    return prisma.user.delete({
       where: { id },
     });
   }
 
   // Thống kê tổng quan
   async getUserStats() {
+    const prisma = await this.getTenantPrisma();
     const [totalUsers, verifiedUsers, adminUsers, studentUsers] = await Promise.all([
-      this.prisma.user.count(),
-      this.prisma.user.count({ where: { isVerified: true } }),
-      this.prisma.user.count({ where: { role: 'admin' } }),
-      this.prisma.user.count({ where: { role: 'user' } }),
+      prisma.user.count(),
+      prisma.user.count({ where: { isVerified: true } }),
+      prisma.user.count({ where: { role: 'admin' } }),
+      prisma.user.count({ where: { role: 'user' } }),
     ]);
 
-    const recentUsers = await this.prisma.user.findMany({
+    const recentUsers = await prisma.user.findMany({
       take: 5,
       orderBy: { createdAt: 'desc' },
       select: {
@@ -213,7 +224,8 @@ export class AdminService {
 
   // Thay đổi trạng thái xác thực user
   async toggleUserVerification(id: string) {
-    const user = await this.prisma.user.findUnique({
+    const prisma = await this.getTenantPrisma();
+    const user = await prisma.user.findUnique({
       where: { id },
     });
 
@@ -221,7 +233,7 @@ export class AdminService {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
 
-    return this.prisma.user.update({
+    return prisma.user.update({
       where: { id },
       data: { 
         isVerified: !user.isVerified,
@@ -239,7 +251,8 @@ export class AdminService {
 
   // Thay đổi role user
   async changeUserRole(id: string, role: string) {
-    const user = await this.prisma.user.findUnique({
+    const prisma = await this.getTenantPrisma();
+    const user = await prisma.user.findUnique({
       where: { id },
     });
 
@@ -247,7 +260,7 @@ export class AdminService {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
 
-    return this.prisma.user.update({
+    return prisma.user.update({
       where: { id },
       data: { 
         role,
@@ -265,7 +278,8 @@ export class AdminService {
 
   // Lấy lịch sử hoạt động của user
   async getUserActivity(id: string) {
-    const user = await this.prisma.user.findUnique({
+    const prisma = await this.getTenantPrisma();
+    const user = await prisma.user.findUnique({
       where: { id },
     });
 
@@ -274,7 +288,7 @@ export class AdminService {
     }
 
     const [enrollments, reviews, challengeScores, courseProgress] = await Promise.all([
-      this.prisma.enrollment.findMany({
+      prisma.enrollment.findMany({
         where: { user_id: id },
         include: {
           product: {
@@ -288,7 +302,7 @@ export class AdminService {
         orderBy: { created_at: 'desc' },
         take: 10
       }),
-      this.prisma.review.findMany({
+      prisma.review.findMany({
         where: { user_id: id },
         include: {
           product: {
@@ -301,7 +315,7 @@ export class AdminService {
         orderBy: { created_at: 'desc' },
         take: 10
       }),
-      this.prisma.challengeScore.findMany({
+      prisma.challengeScore.findMany({
         where: { user_id: id },
         include: {
           challenge: {
@@ -315,7 +329,7 @@ export class AdminService {
         orderBy: { submitted_at: 'desc' },
         take: 10
       }),
-      this.prisma.userCourseProgress.findMany({
+      prisma.userCourseProgress.findMany({
         where: { user_id: id },
         include: {
           course: {

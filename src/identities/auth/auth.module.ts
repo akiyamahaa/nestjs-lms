@@ -1,5 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './strategy';
 import { AuthController } from './auth.controller';
 import { JwtAuthGuard } from './guards/jwt.guard';
@@ -13,9 +14,12 @@ import { BcryptProvider } from './providers/bcrypt.provider';
 import { VerificationsModule } from '../verifications/verifications.module';
 import { EmailModule } from 'src/common/modules/email/email.module';
 import { TenantService } from 'src/common/services/tenant.service';
+import { TenantPrismaService } from 'src/prisma/tenant-prisma.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Module({
   imports: [
+    PassportModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
@@ -45,6 +49,8 @@ import { TenantService } from 'src/common/services/tenant.service';
     JwtAuthGuard,
     AuthService,
     TenantService,
+    TenantPrismaService,
+    PrismaService,
     {
       provide: HashingProvider,
       useClass: BcryptProvider,
