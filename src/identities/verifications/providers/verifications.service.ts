@@ -1,5 +1,6 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { TenantService } from 'src/common/services/tenant.service';
+import { PrismaClient } from 'generated/prisma';
 
 /**
  * Service for handling email verification via OTP.
@@ -10,13 +11,18 @@ export class VerificationsService {
   /**
    * Constructor: Dependency Injection for services and repositories.
    */
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly tenantService: TenantService) {}
+
+  private async getTenantPrisma(): Promise<PrismaClient> {
+    return await this.tenantService.getPrismaClient();
+  }
 
   async generateAndSaveOtp(userId: string) {
+    const prisma = await this.getTenantPrisma();
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes from now
 
-    return await this.prisma.oTP.create({
+    return await prisma.oTP.create({
       data: {
         userId,
         code,
@@ -27,7 +33,8 @@ export class VerificationsService {
   }
 
   async verifyOtp(userId: string, code: string) {
-    const otp = await this.prisma.oTP.findFirst({
+    const prisma = await this.getTenantPrisma();
+    const otp = await prisma.oTP.findFirst({
       where: {
         userId,
         code,
