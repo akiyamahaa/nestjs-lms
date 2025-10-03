@@ -1,0 +1,426 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @default(uuid()) @db.Uuid
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  email      String   @unique
+  fullName   String
+  password   String
+  avatar     String?
+  isVerified Boolean  @default(false)
+  role       String   @default("user")
+  age        Int?
+  grade      Grade?
+
+  otps               OTP[]
+  enrollments        Enrollment[]
+  reviews            Review[]
+  userLessonProgress UserLessonProgress[]
+  challengeScore     ChallengeScore[]
+  userLessonScore    UserLessonScore[]
+  userCourseProgress UserCourseProgress[]
+
+  @@map("users")
+}
+
+model OTP {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  code   String
+  isUsed Boolean @default(false)
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@map("otps")
+}
+
+model Category {
+  id                String         @id @default(uuid()) @db.Uuid
+  title             String         @db.VarChar(150)
+  slug              String         @unique @db.VarChar(150)
+  short_description String
+  status            CategoryStatus @default(draft)
+  created_at        DateTime       @default(now())
+  updated_at        DateTime       @updatedAt
+  deleted_at        DateTime?      @db.Timestamp(6)
+
+  products Product[]
+
+  @@map("categories")
+}
+
+enum CategoryStatus {
+  draft
+  published
+  archived
+}
+
+model Product {
+  id                String  @id @default(uuid()) @db.Uuid
+  title             String  @db.VarChar(255)
+  slug              String  @unique @db.VarChar(255)
+  short_description String
+  description       String?
+
+  category_id String   @db.Uuid
+  category    Category @relation(fields: [category_id], references: [id])
+
+  thumbnail         String        @db.VarChar(255)
+  label             ProductLabel  @default(new)
+  status            ProductStatus @default(draft)
+  requirements      String
+  learning_outcomes String
+  preview_video     String?       @db.VarChar(255)
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime? @db.Timestamp(6)
+
+  modules            Module[]
+  enrollments        Enrollment[]
+  reviews            Review[]
+  userCourseProgress UserCourseProgress[]
+
+  @@unique([label, slug])
+  @@map("products")
+}
+
+model Module {
+  id                String       @id @default(uuid()) @db.Uuid
+  course_id         String       @db.Uuid
+  course            Product      @relation(fields: [course_id], references: [id])
+  title             String       @db.VarChar(255)
+  short_description String
+  order             Int          @default(0)
+  status            ModuleStatus @default(draft)
+  created_at        DateTime     @default(now())
+  updated_at        DateTime     @updatedAt
+  deleted_at        DateTime?    @db.Timestamp(6)
+
+  lessons Lesson[]
+
+  @@map("modules")
+}
+
+model Lesson {
+  id             String       @id @default(uuid()) @db.Uuid
+  module_id      String       @db.Uuid
+  module         Module       @relation(fields: [module_id], references: [id])
+  title          String       @db.VarChar(255)
+  description    String
+  type           LessonType
+  is_previewable Boolean      @default(false)
+  status         LessonStatus @default(draft)
+  order          Int          @default(0)
+  attachment     String?      @db.VarChar(255)
+  created_at     DateTime     @default(now())
+  updated_at     DateTime     @updatedAt
+  deleted_at     DateTime?    @db.Timestamp(6)
+
+  question        QuizQuestion[]
+  userProgress    UserLessonProgress[]
+  userLessonScore UserLessonScore[]
+
+  @@map("lessons")
+}
+
+model Enrollment {
+  id         String   @id @default(uuid()) @db.Uuid
+  user_id    String   @db.Uuid
+  product_id String   @db.Uuid
+  product    Product  @relation(fields: [product_id], references: [id])
+  user       User     @relation(fields: [user_id], references: [id])
+  created_at DateTime @default(now())
+
+  @@unique([user_id, product_id])
+  @@map("enrollments")
+}
+
+model Review {
+  id         String   @id @default(uuid()) @db.Uuid
+  user_id    String   @db.Uuid
+  product_id String   @db.Uuid
+  rating     Int      @db.SmallInt
+  comment    String?
+  status     Boolean  @default(true)
+  created_at DateTime @default(now())
+
+  user    User    @relation(fields: [user_id], references: [id])
+  product Product @relation(fields: [product_id], references: [id])
+
+  @@unique([user_id, product_id])
+  @@map("reviews")
+}
+
+enum ProductLabel {
+  new
+  hot
+  featured
+  best_seller
+}
+
+enum ProductStatus {
+  draft
+  published
+  archived
+}
+
+enum ModuleStatus {
+  draft
+  published
+  archived
+}
+
+enum LessonType {
+  video
+  content
+  quiz
+}
+
+enum LessonStatus {
+  draft
+  published
+  archived
+}
+
+model QuizQuestion {
+  id          String    @id @default(uuid()) @db.Uuid
+  lesson_id   String    @db.Uuid
+  lesson      Lesson    @relation(fields: [lesson_id], references: [id])
+  question    String
+  explanation String?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  deleted_at  DateTime? @db.Timestamp(6)
+
+  answers QuizAnswer[]
+
+  @@map("quiz_questions")
+}
+
+model QuizAnswer {
+  id               String       @id @default(uuid()) @db.Uuid
+  quiz_question_id String       @db.Uuid
+  quiz_question    QuizQuestion @relation(fields: [quiz_question_id], references: [id])
+  answer           String
+  is_correct       Boolean      @default(false)
+  created_at       DateTime     @default(now())
+  updated_at       DateTime     @updatedAt
+  deleted_at       DateTime?    @db.Timestamp(6)
+
+  @@map("quiz_answers")
+}
+
+enum ChallengeType {
+  quiz
+  puzzle
+  ordering
+  fillBlank
+}
+
+model Challenge {
+  id          String          @id @default(uuid()) @db.Uuid
+  title       String
+  slug        String          @unique @db.VarChar(255)
+  description String?
+  type        ChallengeType
+  order       Int             @default(0)
+  status      ChallengeStatus @default(draft)
+  created_at  DateTime        @default(now())
+  updated_at  DateTime        @updatedAt
+
+  questions      ChallengeQuestion[]
+  challengeScore ChallengeScore[]
+
+  // 1-1 relations to each challenge type
+  puzzleChallenge    PuzzleChallenge?    @relation("PuzzleChallengeOnChallenge")
+  orderingChallenge  OrderingChallenge?  @relation("OrderingChallengeOnChallenge")
+  fillBlankChallenge FillBlankChallenge? @relation("FillBlankChallengeOnChallenge")
+
+  @@map("challenge")
+}
+
+enum ChallengeStatus {
+  draft
+  published
+  archived
+}
+
+model ChallengeQuestion {
+  id           String    @id @default(uuid()) @db.Uuid
+  challenge_id String    @db.Uuid
+  challenge    Challenge @relation(fields: [challenge_id], references: [id])
+  question     String
+  explanation  String?
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+
+  answers ChallengeAnswer[]
+
+  @@map("challenge_question")
+}
+
+model ChallengeAnswer {
+  id                    String            @id @default(uuid()) @db.Uuid
+  challenge_question_id String            @db.Uuid
+  challenge_question    ChallengeQuestion @relation(fields: [challenge_question_id], references: [id])
+  answer                String
+  is_correct            Boolean           @default(false)
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+
+  @@map("challenge_answer")
+}
+
+model PuzzleChallenge {
+  id           String    @id @default(uuid()) @db.Uuid
+  challenge_id String    @unique @db.Uuid
+  challenge    Challenge @relation("PuzzleChallengeOnChallenge", fields: [challenge_id], references: [id])
+
+  instruction String
+  image       String
+
+  @@map("puzzle_challenges")
+}
+
+model OrderingChallenge {
+  id           String    @id @default(uuid()) @db.Uuid
+  challenge_id String    @unique @db.Uuid
+  challenge    Challenge @relation("OrderingChallengeOnChallenge", fields: [challenge_id], references: [id])
+
+  instruction String
+  items       OrderingItem[]
+
+  @@map("ordering_challenges")
+}
+
+model OrderingItem {
+  id                String            @id @default(uuid()) @db.Uuid
+  ordering_id       String            @db.Uuid
+  orderingChallenge OrderingChallenge @relation(fields: [ordering_id], references: [id])
+  content           String
+  correct_order     Int
+  explanation       String?
+
+  @@map("ordering_items")
+}
+
+model FillBlankChallenge {
+  id           String    @id @default(uuid()) @db.Uuid
+  challenge_id String    @unique @db.Uuid
+  challenge    Challenge @relation("FillBlankChallengeOnChallenge", fields: [challenge_id], references: [id])
+
+  questions FillBlankQuestion[]
+
+  @@map("fill_blank_challenges")
+}
+
+model FillBlankQuestion {
+  id           String             @id @default(uuid()) @db.Uuid
+  challenge_id String             @db.Uuid
+  challenge    FillBlankChallenge @relation(fields: [challenge_id], references: [id])
+
+  sentence     String
+  correct_word String
+
+  @@map("fill_blank_questions")
+}
+
+model UserLessonProgress {
+  id           String    @id @default(uuid()) @db.Uuid
+  user_id      String    @db.Uuid
+  lesson_id    String    @db.Uuid
+  completed_at DateTime?
+
+  user   User   @relation(fields: [user_id], references: [id])
+  lesson Lesson @relation(fields: [lesson_id], references: [id])
+
+  @@unique([user_id, lesson_id])
+  @@map("user_lesson_progress")
+}
+
+model ChallengeScore {
+  id           String   @id @default(uuid()) @db.Uuid
+  user_id      String   @db.Uuid
+  challenge_id String   @db.Uuid
+  score        Float
+  submitted_at DateTime @default(now())
+
+  user      User      @relation(fields: [user_id], references: [id])
+  challenge Challenge @relation(fields: [challenge_id], references: [id])
+
+  @@unique([user_id, challenge_id])
+  @@map("challenge_scores")
+}
+
+model SystemSetting {
+  id          String   @id @default(uuid()) @db.Uuid
+  key         String   @unique
+  value       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("system_settings")
+}
+
+model UserLessonScore {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  lessonId  String   @db.Uuid
+  score     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id])
+  lesson Lesson @relation(fields: [lessonId], references: [id])
+
+  @@unique([userId, lessonId])
+  @@map("user_lesson_scores")
+}
+
+model UserCourseProgress {
+  id           String    @id @default(uuid()) @db.Uuid
+  user_id      String    @db.Uuid
+  product_id   String    @db.Uuid
+  completed_at DateTime?
+
+  user   User    @relation(fields: [user_id], references: [id])
+  course Product @relation(fields: [product_id], references: [id])
+
+  @@unique([user_id, product_id])
+  @@map("user_course_progress")
+}
+
+enum Grade {
+  G1
+  G2
+  G3
+  G4
+  G5
+  G6
+  G7
+  G8
+  G9
+  G10
+  G11
+  G12
+}
