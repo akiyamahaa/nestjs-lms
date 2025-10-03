@@ -45,6 +45,6 @@ export class VerificationsService {
 
     if (!otp) throw new ForbiddenException('Invalid or expired OTP');
 
-    return { message: 'OTP verified successfully' };
+    return otp;
   }
 }

@@ -101,15 +101,23 @@ export class AuthService {
   }
 
   async verifyEmail(dto: VerifyEmailDto): Promise<{ access_token: string }> {
-    const checkVerify = await this.verificationsService.verifyOtp(
+    const otp = await this.verificationsService.verifyOtp(
       dto.userId,
       dto.otpCode,
     );
-    if (!checkVerify) {
+    if (!otp) {
       throw new ForbiddenException('Invalid or expired OTP');
     }
-    
+
     const prisma = await this.getTenantPrisma();
+    
+    // Đánh dấu OTP đã được sử dụng
+    await prisma.oTP.update({
+      where: { id: otp.id },
+      data: { isUsed: true },
+    });
+
+    // Đánh dấu user đã verify
     const user = await prisma.user.update({
       where: { id: dto.userId },
       data: { isVerified: true },
@@ -195,12 +203,20 @@ export class AuthService {
   async resetPassword(dto: ResetPasswordDto) {
     const { userId, otpCode, password } = dto;
 
-    const isValid = await this.verificationsService.verifyOtp(userId, otpCode);
-    if (!isValid) {
+    const otp = await this.verificationsService.verifyOtp(userId, otpCode);
+    if (!otp) {
       throw new ForbiddenException('OTP không hợp lệ hoặc đã hết hạn');
     }
 
     const prisma = await this.getTenantPrisma();
+    
+    // Đánh dấu OTP đã được sử dụng
+    await prisma.oTP.update({
+      where: { id: otp.id },
+      data: { isUsed: true },
+    });
+
+    // Reset password
     const hashed = await this.hashingProvider.hashPassword(password);
     await prisma.user.update({
       where: { id: userId },
