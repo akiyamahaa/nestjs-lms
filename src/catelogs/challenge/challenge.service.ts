@@ -12,7 +12,7 @@ export class ChallengeService {
     return await this.tenantService.getPrismaClient();
   }
 
-  async findAll(filter?: { search?: string; type?: string; page?: number; perPage?: number }) {
+  async findAll(filter?: { search?: string; type?: string; page?: number; perPage?: number }, userId?: string) {
     const prisma = await this.getTenantPrisma();
     
     const page = filter?.page && filter.page > 0 ? Number(filter.page) : 1;
@@ -37,20 +37,38 @@ export class ChallengeService {
       }),
     ]);
 
-    // Lấy điểm cao nhất cho từng challenge
-    const challengeIds = data.map(challenge => challenge.id);
-    const maxScores = await prisma.challengeScore.groupBy({
-      by: ['challenge_id'],
-      where: { challenge_id: { in: challengeIds } },
-      _max: { score: true },
-    });
+    // Lấy điểm cao nhất của user hiện tại cho từng challenge
+    let userMaxScores: Record<string, number> = {};
+    if (userId) {
+      const challengeIds = data.map(challenge => challenge.id);
+      
+      // Lấy tất cả scores của user cho các challenge này
+      const userScores = await prisma.challengeScore.findMany({
+        where: { 
+          challenge_id: { in: challengeIds },
+          user_id: userId 
+        },
+        select: {
+          challenge_id: true,
+          score: true
+        }
+      });
+      
+      // Tính điểm cao nhất cho từng challenge
+      console.log('Debug userScores:', userScores);
+      userScores.forEach(scoreRecord => {
+        const challengeId = scoreRecord.challenge_id;
+        const currentMax = userMaxScores[challengeId] || 0;
+        userMaxScores[challengeId] = Math.max(currentMax, scoreRecord.score);
+      });
+      console.log('Debug userMaxScores:', userMaxScores);
+    }
 
-    // Map điểm cao nhất vào data
+    // Map điểm cao nhất của user vào data
     const dataWithMaxScore = data.map(challenge => {
-      const maxScoreData = maxScores.find(ms => ms.challenge_id === challenge.id);
       return {
         ...challenge,
-        maxScore: maxScoreData?._max.score || 0,
+        maxScore: userMaxScores[challenge.id] || 0,
       };
     });
 
