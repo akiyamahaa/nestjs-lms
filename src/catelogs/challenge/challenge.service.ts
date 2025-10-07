@@ -104,7 +104,18 @@ export class ChallengeService {
       delete detail.puzzleChallenge;
     }
     if (challenge.type === 'ordering') {
-      detail = { ...challenge, ordering: challenge.orderingChallenge };
+      const ordering = challenge.orderingChallenge;
+      if (ordering && ordering.items) {
+        // Fisher-Yates shuffle để đảo thứ tự chắc chắn
+        const shuffledItems = [...ordering.items];
+        for (let i = shuffledItems.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffledItems[i], shuffledItems[j]] = [shuffledItems[j], shuffledItems[i]];
+        }
+        detail = { ...challenge, ordering: { ...ordering, items: shuffledItems } };
+      } else {
+        detail = { ...challenge, ordering };
+      }
       delete detail.orderingChallenge;
     }
     if (challenge.type === 'fillBlank') {
