@@ -222,7 +222,17 @@ async findAllForUser(filter: { category_id?: string; search?: string, page?: num
             }
           }
         },
-        reviews: true,
+        reviews: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                fullName: true,
+                avatar: true,
+              }
+            }
+          }
+        },
         enrollments: true,
       },
     });
@@ -306,7 +316,13 @@ async findAllForUser(filter: { category_id?: string; search?: string, page?: num
       }
     }
 
-    const reviews = product.reviews || [];
+    const reviews = (product.reviews || []).map((review: any) => ({
+      ...review,
+      user: review.user ? {
+        ...review.user,
+        avatar: getFullUrl(review.user.avatar)
+      } : null
+    }));
     const reviewCount = reviews.length;
     const averageRating = reviewCount
       ? reviews.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) / reviewCount

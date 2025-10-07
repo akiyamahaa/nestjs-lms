@@ -1,10 +1,11 @@
-import { Controller, Get, Param, Query, UseGuards, Post, Body, SetMetadata } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards, Post, Body, SetMetadata, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiQuery, ApiResponse, ApiParam, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { ChallengeService } from './challenge.service';
 import { JwtAuthGuard } from 'src/identities/auth/guards/jwt.guard';
 import { GetUser } from 'src/identities/auth/decorators/get-user.decorator';
 import { SubmitChallengeDto } from './dto/submit-challenge.dto';
 import { SubmitChallengeResponseDto } from './dto/submit-challenge-response.dto';
+import { Request } from 'express';
 
 export const Public = () => SetMetadata('isPublic', true);
 
@@ -21,15 +22,16 @@ export class ChallengeController {
   @ApiQuery({ name: 'page', required: false, description: 'Trang' })
   @ApiQuery({ name: 'perPage', required: false, description: 'Số lượng mỗi trang' })
   @ApiResponse({ status: 200, description: 'Danh sách challenge (published)' })
-  @Public()
   @Get()
   findAll(
+    @GetUser('id') userId: string,
     @Query('search') search?: string,
     @Query('type') type?: string,
     @Query('page') page?: number,
     @Query('perPage') perPage?: number,
   ) {
-    return this.challengeService.findAll({ search, type, page, perPage });
+    // Lấy userId từ request.user nếu có (optional authentication)
+    return this.challengeService.findAll({ search, type, page, perPage }, userId);
   }
 
   @ApiOperation({ summary: 'Lấy chi tiết challenge (published)' })

@@ -318,7 +318,7 @@ export class AdminProductsService {
                       ? (typeof m.status === 'string'
                           ? ModuleStatus[m.status as keyof typeof ModuleStatus]
                           : m.status)
-                      : ModuleStatus.draft,
+                      : ModuleStatus.published,
                     lessons: m.lessons && m.lessons.length > 0
                       ? {
                           create: m.lessons.map((l) => ({
@@ -436,7 +436,7 @@ export class AdminProductsService {
                 ? (typeof m.status === 'string'
                     ? ModuleStatus[m.status as keyof typeof ModuleStatus]
                     : m.status)
-                : ModuleStatus.draft,
+                : ModuleStatus.published,
               lessons: m.lessons && m.lessons.length > 0
                 ? {
                     create: m.lessons.map((l) => ({
