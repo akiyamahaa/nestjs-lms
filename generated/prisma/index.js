@@ -427,7 +427,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/Users/lequanganh/workspace/nestJS/nestjs-lms/generated/prisma",
+      "value": "/Users/lequanganh/workspace/nestjs/nestjs-lms/generated/prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -441,11 +441,12 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/Users/lequanganh/workspace/nestJS/nestjs-lms/prisma/schema.prisma",
+    "sourceFilePath": "/Users/lequanganh/workspace/nestjs/nestjs-lms/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": null
+    "rootEnvPath": null,
+    "schemaEnvPath": "../../.env"
   },
   "relativePath": "../../prisma",
   "clientVersion": "6.7.0",
