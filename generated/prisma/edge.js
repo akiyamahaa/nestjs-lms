@@ -426,7 +426,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/Users/lequanganh/workspace/nestjs/nestjs-lms/generated/prisma",
+      "value": "D:\\workspace\\nestjs\\nestjs-lms\\generated\\prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -435,16 +435,16 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "darwin-arm64",
+        "value": "windows",
         "native": true
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/Users/lequanganh/workspace/nestjs/nestjs-lms/prisma/schema.prisma",
+    "sourceFilePath": "D:\\workspace\\nestjs\\nestjs-lms\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": null,
+    "rootEnvPath": "../../.env",
     "schemaEnvPath": "../../.env"
   },
   "relativePath": "../../prisma",
