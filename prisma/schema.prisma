@@ -130,7 +130,7 @@ model Lesson {
   is_previewable Boolean      @default(false)
   status         LessonStatus @default(draft)
   order          Int          @default(0)
-  attachment     String?      @db.VarChar(255)
+  attachment     String?
   created_at     DateTime     @default(now())
   updated_at     DateTime     @updatedAt
   deleted_at     DateTime?    @db.Timestamp(6)
