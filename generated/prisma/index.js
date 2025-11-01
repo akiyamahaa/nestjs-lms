@@ -427,7 +427,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/Users/lequanganh/workspace/nestjs/nestjs-lms/generated/prisma",
+      "value": "D:\\workspace\\nestjs\\nestjs-lms\\generated\\prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -436,12 +436,12 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "darwin-arm64",
+        "value": "windows",
         "native": true
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/Users/lequanganh/workspace/nestjs/nestjs-lms/prisma/schema.prisma",
+    "sourceFilePath": "D:\\workspace\\nestjs\\nestjs-lms\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
@@ -455,12 +455,11 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
-  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
         "fromEnvVar": "DATABASE_URL",
-        "value": null
+        "value": "postgresql://lms-db_owner:npg_gTICSG3j9aut@ep-wispy-shadow-a1gy34at-pooler.ap-southeast-1.aws.neon.tech/history-new?sslmode=require&channel_binding=require"
       }
     }
   },
@@ -504,8 +503,8 @@ exports.PrismaClient = PrismaClient
 Object.assign(exports, Prisma)
 
 // file annotations for bundling tools to include these files
-path.join(__dirname, "libquery_engine-darwin-arm64.dylib.node");
-path.join(process.cwd(), "generated/prisma/libquery_engine-darwin-arm64.dylib.node")
+path.join(__dirname, "query_engine-windows.dll.node");
+path.join(process.cwd(), "generated/prisma/query_engine-windows.dll.node")
 // file annotations for bundling tools to include these files
 path.join(__dirname, "schema.prisma");
 path.join(process.cwd(), "generated/prisma/schema.prisma")
