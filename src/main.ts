@@ -23,9 +23,9 @@ async function bootstrap() {
       'http://127.0.0.1:3000',
       'https://nextjs-history-lms.vercel.app',
       'https://fin-edu.vercel.app',
-      "https://thinklab-2110.vercel.app",
-      "https://anh-hung-su-viet.vercel.app",
-      "*"
+      'https://thinklab-2110.vercel.app',
+      'https://anh-hung-su-viet.vercel.app',
+      'https://math-tek.vercel.app',
     ], // Cho phép cả localhost và 127.0.0.1
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true, // Nếu dùng cookie, JWT trong header
