@@ -426,7 +426,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "D:\\workspace\\nestjs\\nestjs-lms\\generated\\prisma",
+      "value": "/Users/lequanganh/workspace/nestjs/nestjs-lms/generated/prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -435,12 +435,12 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "windows",
+        "value": "darwin-arm64",
         "native": true
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "D:\\workspace\\nestjs\\nestjs-lms\\prisma\\schema.prisma",
+    "sourceFilePath": "/Users/lequanganh/workspace/nestjs/nestjs-lms/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
@@ -458,7 +458,7 @@ const config = {
     "db": {
       "url": {
         "fromEnvVar": "DATABASE_URL",
-        "value": "postgresql://lms-db_owner:npg_gTICSG3j9aut@ep-wispy-shadow-a1gy34at-pooler.ap-southeast-1.aws.neon.tech/history-new?sslmode=require&channel_binding=require"
+        "value": "postgresql://lms-db_owner:npg_gTICSG3j9aut@ep-wispy-shadow-a1gy34at-pooler.ap-southeast-1.aws.neon.tech/lms-history?sslmode=require&channel_binding=require"
       }
     }
   },
