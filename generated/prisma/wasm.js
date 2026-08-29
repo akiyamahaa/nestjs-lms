@@ -143,6 +143,15 @@ exports.Prisma.OTPScalarFieldEnum = {
   userId: 'userId'
 };
 
+exports.Prisma.ConversationScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  conversationId: 'conversationId',
+  userId: 'userId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.CategoryScalarFieldEnum = {
   id: 'id',
   title: 'title',
@@ -421,6 +430,7 @@ exports.ChallengeStatus = exports.$Enums.ChallengeStatus = {
 exports.Prisma.ModelName = {
   User: 'User',
   OTP: 'OTP',
+  Conversation: 'Conversation',
   Category: 'Category',
   Product: 'Product',
   Module: 'Module',

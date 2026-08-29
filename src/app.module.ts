@@ -17,6 +17,7 @@ import { ReviewsModule } from './reviews/reviews.module';
 import { ChallengeModule } from './catelogs/challenge/challenge.module';
 import { ScoresModule } from './scores/scores.module';
 import { TenantInterceptor } from './common/interceptors/tenant.interceptor';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -35,7 +36,8 @@ import { TenantInterceptor } from './common/interceptors/tenant.interceptor';
     EnrollmentsModule,
     ReviewsModule,
     ChallengeModule,
-    ScoresModule
+    ScoresModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [

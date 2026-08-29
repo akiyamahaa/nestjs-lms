@@ -1,6 +1,8 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 
+const DEFAULT_CHATBOT_CODE = process.env.CHATBOT_CODE || 'customer-support';
+
 @Injectable()
 export class TenantMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
@@ -16,6 +18,9 @@ export class TenantMiddleware implements NestMiddleware {
       return res.status(400).json({ message: 'Invalid tenant id' });
 
     (req as any).databaseUrl = databaseUrl;
+    (req as any).chatbotCode =
+      process.env[`CHATBOT_CODE_${tenantId.toUpperCase()}`] ||
+      DEFAULT_CHATBOT_CODE;
     next();
   }
 }
