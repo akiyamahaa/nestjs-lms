@@ -465,11 +465,12 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
         "fromEnvVar": "DATABASE_URL",
-        "value": "postgresql://lms-db_owner:npg_gTICSG3j9aut@ep-wispy-shadow-a1gy34at-pooler.ap-southeast-1.aws.neon.tech/lms-vinyl?sslmode=require&channel_binding=require"
+        "value": null
       }
     }
   },

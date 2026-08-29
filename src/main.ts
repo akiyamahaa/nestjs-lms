@@ -30,7 +30,7 @@ async function bootstrap() {
       'https://thinklab-2110.vercel.app',
       'https://anh-hung-su-viet.vercel.app',
       'https://math-tek.vercel.app',
-      'https://historyfun.vercel.app'
+      'https://historyfun.vercel.app',
     ], // Cho phép cả localhost và 127.0.0.1
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true, // Nếu dùng cookie, JWT trong header
@@ -38,9 +38,9 @@ async function bootstrap() {
 
   // ✅ Setup Swagger
   const port = parseInt(process.env.PORT ?? '5005', 10);
-  if (process.env.NODE_ENV !== 'production') {
-    setupSwagger(app, port);
-  }
+  // if (process.env.NODE_ENV !== 'production') {
+  // }
+  setupSwagger(app, port);
 
   await app.listen(port);
   console.log(`🚀 Server running on http://localhost:${port}`, 'Bootstrap');
