@@ -11,7 +11,9 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+
 import { Request } from 'express';
+
 import {
   ApiBearerAuth,
   ApiBody,
@@ -19,10 +21,13 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
+
 import { FilesInterceptor } from '@nestjs/platform-express';
+
 import { ChatService } from './chat.service';
 import { SendMessageDto } from './dto/send-message.dto';
 import { RenameConversationDto } from './dto/rename-conversation.dto';
+
 import { JwtAuthGuard } from 'src/identities/auth/guards/jwt.guard';
 import { GetUser } from 'src/identities/auth/decorators/get-user.decorator';
 
@@ -31,8 +36,13 @@ import { GetUser } from 'src/identities/auth/decorators/get-user.decorator';
 @UseGuards(JwtAuthGuard)
 @Controller('chat')
 export class ChatController {
-  constructor(private chatService: ChatService) {}
+  constructor(private readonly chatService: ChatService) {}
 
+  /**
+   * Gửi message
+   * - Không có conversationId -> tạo conversation mới
+   * - Có conversationId -> tiếp tục conversation hiện tại
+   */
   @Post()
   @ApiOperation({
     summary:
@@ -44,7 +54,10 @@ export class ChatController {
       type: 'object',
       required: ['message'],
       properties: {
-        message: { type: 'string', description: 'Nội dung tin nhắn' },
+        message: {
+          type: 'string',
+          description: 'Nội dung tin nhắn',
+        },
         conversationId: {
           type: 'string',
           nullable: true,
@@ -52,7 +65,10 @@ export class ChatController {
         },
         images: {
           type: 'array',
-          items: { type: 'string', format: 'binary' },
+          items: {
+            type: 'string',
+            format: 'binary',
+          },
           description: 'Ảnh đính kèm (tuỳ chọn)',
         },
       },
@@ -60,7 +76,7 @@ export class ChatController {
   })
   @UseInterceptors(FilesInterceptor('images'))
   sendMessage(
-    @GetUser('sub') userId: string,
+    @GetUser('id') userId: string,
     @Body() dto: SendMessageDto,
     @Req() req: Request,
     @UploadedFiles() images?: Express.Multer.File[],
@@ -68,34 +84,54 @@ export class ChatController {
     return this.chatService.sendMessage(userId, dto, images, req.chatbotCode);
   }
 
+  /**
+   * Lấy toàn bộ conversations của user
+   */
   @Get('conversations')
-  @ApiOperation({ summary: 'Lấy tất cả conversations của user' })
-  getConversations(@GetUser('sub') userId: string) {
+  @ApiOperation({
+    summary: 'Lấy tất cả conversations của user',
+  })
+  getConversations(@GetUser('id') userId: string) {
     return this.chatService.getConversationsByUser(userId);
   }
 
+  /**
+   * Lấy detail conversation
+   */
   @Get('conversations/:id')
-  @ApiOperation({ summary: 'Lấy chi tiết conversation (messages) theo id' })
+  @ApiOperation({
+    summary: 'Lấy chi tiết conversation (messages) theo id',
+  })
   getConversationDetail(
     @Param('id') id: string,
-    @GetUser('sub') userId: string,
+    @GetUser('id') userId: string,
   ) {
     return this.chatService.getConversationDetail(id, userId);
   }
 
+  /**
+   * Rename conversation
+   */
   @Patch('conversations/:id/rename')
-  @ApiOperation({ summary: 'Đổi tên conversation' })
+  @ApiOperation({
+    summary: 'Đổi tên conversation',
+  })
   renameConversation(
     @Param('id') id: string,
-    @GetUser('sub') userId: string,
+    @GetUser('id') userId: string,
     @Body() dto: RenameConversationDto,
   ) {
-    return this.chatService.renameConversation(String(id), userId, dto);
+    return this.chatService.renameConversation(id, userId, dto);
   }
 
+  /**
+   * Delete conversation
+   */
   @Delete('conversations/:id')
-  @ApiOperation({ summary: 'Xóa conversation theo id' })
-  deleteConversation(@Param('id') id: string, @GetUser('sub') userId: string) {
-    return this.chatService.deleteConversation(String(id), userId);
+  @ApiOperation({
+    summary: 'Xóa conversation theo id',
+  })
+  deleteConversation(@Param('id') id: string, @GetUser('id') userId: string) {
+    return this.chatService.deleteConversation(id, userId);
   }
 }
