@@ -76,397 +76,167 @@ function q(
 // Use the explicit ___ marker. Frontend rendering cannot be checked in this checkout.
 export const seeds: Seed[] = [
   {
-    type: 'quiz',
-    title: 'JavaScript: Giá trị và biến',
-    slug: 'seed-quiz-javascript-values',
+    type: "quiz",
+    title: "Hai Bà Trưng và cuộc khởi nghĩa năm 40",
+    slug: "seed-quiz-hai-ba-trung",
     order: 1,
-    description:
-      'Nhận biết kiểu dữ liệu, khai báo biến và phép so sánh trong JavaScript.',
+    description: "Tìm hiểu Trưng Trắc, Trưng Nhị và ý nghĩa cuộc khởi nghĩa chống ách đô hộ Đông Hán.",
     questions: [
-      q(
-        'typeof 42 trả về chuỗi nào?',
-        '42 là một giá trị số; typeof trả về chuỗi number.',
-        'number',
-        'string',
-        'boolean',
-        'object',
-      ),
-      q(
-        'Khai báo nào cho phép gán lại giá trị của biến score?',
-        'let cho phép gán lại biến trong phạm vi khối.',
-        'let score = 0;',
-        'const score = 0;',
-        'const score = "0";',
-        'const score = false;',
-      ),
-      q(
-        'Giá trị của 2 + "3" là gì?',
-        'Khi một toán hạng là chuỗi, phép + nối chuỗi thành "23".',
-        '"23"',
-        '5',
-        '6',
-        'undefined',
-      ),
-      q(
-        'Biểu thức nào kiểm tra cả giá trị và kiểu dữ liệu?',
-        '=== là phép so sánh bằng nghiêm ngặt, không ép kiểu.',
-        'a === b',
-        'a = b',
-        'a + b',
-        'a == b',
-      ),
-      q(
-        'Kiểu dữ liệu của true là gì?',
-        'true và false là hai giá trị boolean.',
-        'boolean',
-        'number',
-        'string',
-        'function',
-      ),
+      q("Hai Bà Trưng là hai nhân vật lịch sử nào?", "Hai Bà Trưng gồm Trưng Trắc và Trưng Nhị.", "Trưng Trắc và Trưng Nhị", "Bà Triệu và Trưng Trắc", "Ỷ Lan và Trưng Nhị", "Nguyễn Thị Minh Khai và Võ Thị Sáu"),
+      q("Khởi nghĩa Hai Bà Trưng bùng nổ vào năm nào?", "Cuộc khởi nghĩa chống chính quyền đô hộ Đông Hán nổ ra năm 40.", "Năm 40", "Năm 248", "Năm 938", "Năm 1010"),
+      q("Hai Bà Trưng phất cờ khởi nghĩa tại địa danh nào?", "Theo cách trình bày phổ biến trong sách lịch sử, cuộc khởi nghĩa được phát động tại Hát Môn.", "Hát Môn", "Bạch Đằng", "Chi Lăng", "Đống Đa"),
+      q("Đối tượng mà cuộc khởi nghĩa Hai Bà Trưng chống lại là chính quyền nào?", "Khởi nghĩa diễn ra chống lại ách đô hộ của nhà Đông Hán.", "Nhà Đông Hán", "Nhà Minh", "Nhà Thanh", "Thực dân Pháp"),
+      q("Ý nghĩa nổi bật của cuộc khởi nghĩa Hai Bà Trưng là gì?", "Cuộc khởi nghĩa thể hiện ý chí giành độc lập, tự chủ của người Việt trong thời Bắc thuộc.", "Khẳng định ý chí giành độc lập, tự chủ", "Mở đầu triều Nguyễn", "Thống nhất đất nước vào năm 1975", "Dời đô về Thăng Long"),
     ],
   },
   {
-    type: 'quiz',
-    title: 'JavaScript: Điều kiện và vòng lặp',
-    slug: 'seed-quiz-control-flow',
+    type: "quiz",
+    title: "Ngô Quyền và chiến thắng Bạch Đằng",
+    slug: "seed-quiz-ngo-quyen",
     order: 2,
-    description:
-      'Luyện suy luận các nhánh điều kiện và số lần thực hiện vòng lặp.',
+    description: "Khám phá tài thao lược của Ngô Quyền và chiến thắng lịch sử năm 938.",
     questions: [
-      q(
-        'Nhánh if (3 > 2) có được thực hiện không?',
-        '3 lớn hơn 2 nên điều kiện là true.',
-        'Có',
-        'Không',
-        'Chỉ khi có else',
-        'Luôn phát sinh lỗi',
-      ),
-      q(
-        'Vòng lặp for (let i = 0; i < 3; i++) chạy thân vòng lặp bao nhiêu lần?',
-        'Thân vòng lặp chạy với i bằng 0, 1 và 2.',
-        '3',
-        '2',
-        '4',
-        '0',
-      ),
-      q(
-        'Lệnh nào thoát khỏi vòng lặp gần nhất ngay lập tức?',
-        'break kết thúc vòng lặp chứa nó.',
-        'break',
-        'continue',
-        'typeof',
-        'const',
-      ),
-      q(
-        'Lệnh continue trong vòng lặp làm gì?',
-        'continue bỏ phần còn lại của lượt hiện tại rồi chuyển sang lượt tiếp theo.',
-        'Chuyển sang lượt lặp tiếp theo',
-        'Kết thúc toàn bộ chương trình',
-        'Khai báo một biến',
-        'Đảo ngược mảng',
-      ),
-      q(
-        'Điều kiện nào đúng khi age ít nhất là 18?',
-        'Ít nhất 18 bao gồm cả giá trị 18, nên dùng >=.',
-        'age >= 18',
-        'age > 18',
-        'age < 18',
-        'age === 17',
-      ),
+      q("Ai chỉ huy quân dân ta giành thắng lợi trên sông Bạch Đằng năm 938?", "Ngô Quyền lãnh đạo trận Bạch Đằng đánh bại quân Nam Hán.", "Ngô Quyền", "Lê Lợi", "Trần Quốc Tuấn", "Quang Trung"),
+      q("Trận Bạch Đằng do Ngô Quyền chỉ huy diễn ra vào năm nào?", "Trận chiến trên sông Bạch Đằng diễn ra năm 938.", "Năm 938", "Năm 40", "Năm 1288", "Năm 1789"),
+      q("Đối thủ của quân ta trong trận Bạch Đằng năm 938 là lực lượng nào?", "Quân Nam Hán tiến vào theo đường thủy và bị đánh bại.", "Quân Nam Hán", "Quân Nguyên", "Quân Thanh", "Quân Minh"),
+      q("Ngô Quyền đã tận dụng yếu tố tự nhiên nào trong trận Bạch Đằng?", "Quân ta lợi dụng thủy triều lên xuống kết hợp trận địa cọc trên sông.", "Thủy triều lên xuống", "Bão tuyết", "Núi lửa", "Hạn hán"),
+      q("Chiến thắng Bạch Đằng năm 938 có ý nghĩa nổi bật nào?", "Chiến thắng mở ra thời kỳ độc lập tự chủ lâu dài, chấm dứt thời kỳ Bắc thuộc kéo dài.", "Mở ra thời kỳ độc lập tự chủ lâu dài", "Đánh dấu ngày thành lập nước Việt Nam Dân chủ Cộng hòa", "Khởi đầu cuộc kháng chiến chống Pháp năm 1946", "Thống nhất đất nước năm 1975"),
     ],
   },
   {
-    type: 'quiz',
-    title: 'Hàm và thuật toán cơ bản',
-    slug: 'seed-quiz-functions-algorithms',
+    type: "quiz",
+    title: "Trần Hưng Đạo, Lê Lợi và Quang Trung",
+    slug: "seed-quiz-heroes-dai-viet",
     order: 3,
-    description:
-      'Hiểu tham số, giá trị trả về, tìm kiếm tuyến tính và thuật toán.',
+    description: "Nhận diện các vị anh hùng dân tộc qua những chiến công tiêu biểu.",
     questions: [
-      q(
-        'function double(x) { return x * 2; } trả về gì khi gọi double(4)?',
-        'Tham số x nhận 4 nên x * 2 bằng 8.',
-        '8',
-        '4',
-        '2',
-        'undefined',
-      ),
-      q(
-        'Từ khóa nào trả một giá trị từ hàm cho nơi gọi?',
-        'return kết thúc lần gọi hàm và cung cấp giá trị trả về.',
-        'return',
-        'break',
-        'let',
-        'while',
-      ),
-      q(
-        'Thuật toán là gì?',
-        'Thuật toán mô tả một chuỗi bước rõ ràng nhằm giải quyết bài toán.',
-        'Một chuỗi bước rõ ràng để giải bài toán',
-        'Chỉ là một ngôn ngữ lập trình',
-        'Một loại màn hình',
-        'Một lỗi cú pháp',
-      ),
-      q(
-        'Tìm tuyến tính giá trị 9 trong [4, 7, 9] từ trái sang phải cần kiểm tra bao nhiêu phần tử?',
-        'Phải kiểm tra lần lượt 4, 7 rồi 9.',
-        '3',
-        '1',
-        '2',
-        '9',
-      ),
-      q(
-        'Với mảng JavaScript [10, 20, 30], chỉ số của phần tử đầu tiên là gì?',
-        'Mảng JavaScript dùng chỉ số bắt đầu từ 0.',
-        '0',
-        '1',
-        '10',
-        '-1',
-      ),
+      q("Trần Hưng Đạo còn được biết đến với tên gọi nào?", "Trần Hưng Đạo là tước hiệu của Trần Quốc Tuấn.", "Trần Quốc Tuấn", "Nguyễn Huệ", "Lê Lợi", "Ngô Quyền"),
+      q("Chiến thắng Bạch Đằng năm 1288 gắn với vị tướng nào?", "Trần Quốc Tuấn giữ vai trò tổng chỉ huy quân đội nhà Trần trong cuộc kháng chiến chống Nguyên năm 1288.", "Trần Hưng Đạo", "Hai Bà Trưng", "Quang Trung", "Đinh Bộ Lĩnh"),
+      q("Ai là lãnh tụ cuộc khởi nghĩa Lam Sơn chống quân Minh?", "Lê Lợi lãnh đạo cuộc khởi nghĩa Lam Sơn bắt đầu năm 1418.", "Lê Lợi", "Ngô Quyền", "Trần Nhân Tông", "Lý Thường Kiệt"),
+      q("Hoàng đế Quang Trung có tên gọi khi chưa lên ngôi là gì?", "Quang Trung là niên hiệu của Nguyễn Huệ khi lên ngôi hoàng đế.", "Nguyễn Huệ", "Nguyễn Ánh", "Nguyễn Trãi", "Nguyễn Bỉnh Khiêm"),
+      q("Chiến thắng Ngọc Hồi – Đống Đa mùa xuân 1789 gắn với ai?", "Quang Trung chỉ huy quân Tây Sơn đánh bại quân Thanh vào mùa xuân Kỷ Dậu 1789.", "Quang Trung", "Trần Hưng Đạo", "Lê Hoàn", "Ngô Quyền"),
     ],
   },
   {
-    type: 'ordering',
-    title: 'Thuật toán cộng hai số',
-    slug: 'seed-ordering-add-two-numbers',
+    type: "ordering",
+    title: "Diễn biến chiến thắng Bạch Đằng năm 938",
+    slug: "seed-ordering-bach-dang-938",
     order: 4,
-    description:
-      'Sắp xếp các bước nhập, xử lý và xuất kết quả của một thuật toán đơn giản.',
-    instruction:
-      'Đặt các bước theo trình tự từ bắt đầu đến kết thúc. Vị trí đầu tiên là 1.',
+    description: "Sắp xếp các mốc chính trong kế hoạch đánh quân Nam Hán của Ngô Quyền.",
+    instruction: "Sắp xếp diễn biến khái quát của trận Bạch Đằng năm 938, từ chuẩn bị đến thắng lợi.",
     items: [
-      {
-        content: 'Bắt đầu thuật toán.',
-        explanation: 'Xác định điểm bắt đầu trước khi nhận dữ liệu.',
-      },
-      {
-        content: 'Nhập số thứ nhất và lưu vào a.',
-        explanation: 'Cần có a trước phép cộng.',
-      },
-      {
-        content: 'Nhập số thứ hai và lưu vào b.',
-        explanation: 'Thực hiện sau bước nhập số thứ nhất theo đề bài.',
-      },
-      {
-        content: 'Tính sum = a + b.',
-        explanation: 'Chỉ cộng khi đã có cả hai số.',
-      },
-      { content: 'Hiển thị sum.', explanation: 'Xuất kết quả đã tính.' },
-      {
-        content: 'Kết thúc thuật toán.',
-        explanation: 'Không còn bước xử lý nào.',
-      },
+      { content: "Ngô Quyền chuẩn bị lực lượng và lựa chọn sông Bạch Đằng làm trận địa.", explanation: "Chủ động lựa chọn địa hình phù hợp để chống quân thủy." },
+      { content: "Quân ta bố trí bãi cọc ngầm ở lòng sông.", explanation: "Trận địa cọc phát huy tác dụng khi nước triều rút." },
+      { content: "Quân ta dùng thuyền nhẹ ra khiêu chiến, nhử quân Nam Hán tiến sâu.", explanation: "Kéo đối phương vào khu vực đã chuẩn bị." },
+      { content: "Khi thủy triều rút, quân Nam Hán gặp bất lợi tại bãi cọc.", explanation: "Thuyền địch mắc vào trận địa cọc khi nước xuống." },
+      { content: "Quân ta phản công quyết liệt, đánh bại quân Nam Hán.", explanation: "Chớp thời cơ phản công để giành chiến thắng." },
+      { content: "Chiến thắng Bạch Đằng mở ra thời kỳ độc lập tự chủ lâu dài.", explanation: "Kết quả có ý nghĩa bước ngoặt đối với lịch sử dân tộc." },
     ],
   },
   {
-    type: 'ordering',
-    title: 'Theo dõi vòng lặp tính tổng',
-    slug: 'seed-ordering-loop-sum',
+    type: "ordering",
+    title: "Các mốc khởi nghĩa Lam Sơn",
+    slug: "seed-ordering-lam-son",
     order: 5,
-    description: 'Theo dõi sum và i khi cộng các số từ 1 đến 3.',
-    instruction:
-      'Sắp xếp dấu vết thực thi của let sum = 0; for (let i = 1; i <= 3; i++) { sum += i; } rồi in sum.',
+    description: "Ôn những mốc chính từ khởi nghĩa Lam Sơn đến sự ra đời triều Lê sơ.",
+    instruction: "Sắp xếp các sự kiện theo trình tự thời gian, từ năm 1418 đến năm 1428.",
     items: [
-      {
-        content: 'Khởi tạo sum = 0.',
-        explanation: 'Biến tích lũy phải có giá trị ban đầu.',
-      },
-      {
-        content: 'Khởi tạo i = 1 và kiểm tra i <= 3: đúng.',
-        explanation: 'Chuẩn bị lượt đầu tiên.',
-      },
-      {
-        content: 'Cộng i = 1 vào sum: sum = 1.',
-        explanation: 'Lượt thứ nhất.',
-      },
-      {
-        content: 'Tăng i thành 2, điều kiện đúng, cộng vào sum: sum = 3.',
-        explanation: 'Lượt thứ hai.',
-      },
-      {
-        content: 'Tăng i thành 3, điều kiện đúng, cộng vào sum: sum = 6.',
-        explanation: 'Lượt thứ ba.',
-      },
-      {
-        content: 'Tăng i thành 4, điều kiện sai, thoát vòng lặp.',
-        explanation: '4 không nhỏ hơn hoặc bằng 3.',
-      },
-      {
-        content: 'In sum: 6.',
-        explanation: 'Chỉ in sau khi vòng lặp kết thúc.',
-      },
+      { content: "Năm 1418: Lê Lợi dựng cờ khởi nghĩa ở Lam Sơn.", explanation: "Khởi đầu phong trào chống quân Minh." },
+      { content: "Giai đoạn đầu: nghĩa quân chiến đấu, gây dựng lực lượng ở vùng Thanh Hóa.", explanation: "Nghĩa quân trải qua nhiều khó khăn trước khi mở rộng địa bàn." },
+      { content: "Năm 1424: nghĩa quân tiến vào Nghệ An, mở rộng vùng kiểm soát.", explanation: "Bước chuyển quan trọng của cuộc khởi nghĩa." },
+      { content: "Năm 1426: nghĩa quân thắng lớn tại Tốt Động – Chúc Động.", explanation: "Thắng lợi quan trọng tại vùng đồng bằng Bắc Bộ." },
+      { content: "Năm 1427: nghĩa quân thắng trận Chi Lăng – Xương Giang.", explanation: "Đánh bại đạo viện binh chủ lực của nhà Minh." },
+      { content: "Năm 1428: Lê Lợi lên ngôi vua, mở đầu triều Lê sơ.", explanation: "Khép lại cuộc khởi nghĩa thắng lợi." },
     ],
   },
   {
-    type: 'ordering',
-    title: 'Tạo và kiểm tra hàm double',
-    slug: 'seed-ordering-create-function',
+    type: "ordering",
+    title: "Hành quân thần tốc mùa xuân 1789",
+    slug: "seed-ordering-quang-trung-1789",
     order: 6,
-    description: 'Thực hiện tuần tự một quy trình viết hàm JavaScript nhỏ.',
-    instruction:
-      'Sắp xếp quy trình: xác định yêu cầu, viết hàm, gọi hàm, rồi kiểm tra kết quả.',
+    description: "Sắp xếp những mốc chính trong cuộc tiến quân của Quang Trung đánh quân Thanh.",
+    instruction: "Đặt các sự kiện theo trình tự lịch sử trong chiến dịch mùa xuân Kỷ Dậu 1789.",
     items: [
-      {
-        content: 'Xác định yêu cầu: nhận số x và trả về gấp đôi x.',
-        explanation: 'Hiểu đầu vào và đầu ra trước khi viết mã.',
-      },
-      {
-        content: 'Viết phần mở đầu: function double(x) {',
-        explanation: 'Khai báo tên hàm và tham số.',
-      },
-      {
-        content: 'Viết thân hàm: return x * 2;',
-        explanation: 'Tính và trả về giá trị theo yêu cầu.',
-      },
-      {
-        content: 'Đóng thân hàm bằng dấu }.',
-        explanation: 'Hoàn tất khai báo trước khi gọi.',
-      },
-      {
-        content: 'Gọi hàm và lưu kết quả: const result = double(4);',
-        explanation: 'Thực hiện hàm với dữ liệu thử.',
-      },
-      {
-        content: 'Kiểm tra result === 8.',
-        explanation: 'Đối chiếu kết quả với mong đợi.',
-      },
+      { content: "Quân Thanh tiến vào Thăng Long cuối năm 1788.", explanation: "Bối cảnh dẫn đến chiến dịch phản công." },
+      { content: "Nguyễn Huệ lên ngôi hoàng đế, lấy niên hiệu Quang Trung.", explanation: "Ông lên ngôi trước khi trực tiếp tiến quân ra Bắc." },
+      { content: "Quang Trung chỉ huy đại quân hành quân gấp ra Bắc.", explanation: "Tổ chức lực lượng và tiến quân nhanh chóng." },
+      { content: "Quân Tây Sơn tập kết tại Tam Điệp và chuẩn bị tiến công.", explanation: "Sắp xếp lực lượng trước trận quyết chiến." },
+      { content: "Quân Tây Sơn lần lượt tiến đánh các vị trí phòng thủ của quân Thanh.", explanation: "Đẩy mạnh thế tiến công trong dịp Tết Kỷ Dậu." },
+      { content: "Quân Tây Sơn thắng lớn tại Ngọc Hồi – Đống Đa, giải phóng Thăng Long.", explanation: "Đỉnh cao của chiến dịch mùa xuân 1789." },
+      { content: "Chiến thắng củng cố nền độc lập và được ghi nhớ trong lịch sử dân tộc.", explanation: "Khái quát ý nghĩa cuộc chiến thắng." },
     ],
   },
   {
-    type: 'fillBlank',
-    title: 'Điền từ: Biến và kiểu dữ liệu',
-    slug: 'seed-fillblank-variables',
+    type: "fillBlank",
+    title: "Điền tên các vị anh hùng dân tộc",
+    slug: "seed-fillblank-hero-names",
     order: 7,
-    description: 'Điền một từ vào mỗi dấu ___; không cần dấu chấm câu.',
+    description: "Hoàn thành tên riêng của các nhân vật lịch sử Việt Nam.",
     questions: [
-      {
-        sentence:
-          'Từ khóa khai báo biến có phạm vi khối, cho phép gán lại: ___ count = 0;',
-        correct_word: 'let',
-      },
-      {
-        sentence:
-          'Từ khóa khai báo biến có phạm vi khối, không cho phép gán lại: ___ max = 10;',
-        correct_word: 'const',
-      },
-      {
-        sentence: 'Toán tử trả về tên kiểu dữ liệu: ___ 42',
-        correct_word: 'typeof',
-      },
-      {
-        sentence: 'typeof "hello" trả về chuỗi "___".',
-        correct_word: 'string',
-      },
-      { sentence: 'typeof false trả về chuỗi "___".', correct_word: 'boolean' },
-      { sentence: 'typeof 3.14 trả về chuỗi "___".', correct_word: 'number' },
+      { sentence: "Hai Bà Trưng gồm Trưng Trắc và Trưng ___.", correct_word: "Nhị" },
+      { sentence: "Người chỉ huy chiến thắng Bạch Đằng năm 938 là Ngô ___.", correct_word: "Quyền" },
+      { sentence: "Trần Hưng Đạo có tên thật là Trần Quốc ___.", correct_word: "Tuấn" },
+      { sentence: "Lãnh tụ khởi nghĩa Lam Sơn là Lê ___.", correct_word: "Lợi" },
+      { sentence: "Hoàng đế Quang Trung còn được gọi là Nguyễn ___.", correct_word: "Huệ" },
+      { sentence: "Nữ anh hùng khởi nghĩa chống Đông Ngô năm 248 là Bà ___.", correct_word: "Triệu" },
     ],
   },
   {
-    type: 'fillBlank',
-    title: 'Điền từ: Điều kiện và vòng lặp',
-    slug: 'seed-fillblank-control-flow',
+    type: "fillBlank",
+    title: "Điền sự kiện và địa danh lịch sử",
+    slug: "seed-fillblank-historic-events",
     order: 8,
-    description:
-      'Hoàn thành cú pháp điều khiển luồng JavaScript bằng một từ khóa.',
+    description: "Ôn địa danh và những chiến công gắn với anh hùng dân tộc.",
     questions: [
-      {
-        sentence: '___ (age >= 18) { console.log("Adult"); }',
-        correct_word: 'if',
-      },
-      {
-        sentence: 'if (ready) { start(); } ___ { wait(); }',
-        correct_word: 'else',
-      },
-      {
-        sentence: '___ (let i = 0; i < 3; i++) { console.log(i); }',
-        correct_word: 'for',
-      },
-      {
-        sentence:
-          '___ (count < 3) { count++; } // kiểm tra điều kiện trước mỗi lượt',
-        correct_word: 'while',
-      },
-      {
-        sentence: 'Trong vòng lặp, dùng ___ để kết thúc vòng lặp ngay lập tức.',
-        correct_word: 'break',
-      },
-      {
-        sentence:
-          'Trong vòng lặp, dùng ___ để bỏ qua phần còn lại của lượt hiện tại.',
-        correct_word: 'continue',
-      },
+      { sentence: "Chiến thắng năm 938 của Ngô Quyền diễn ra trên sông ___.", correct_word: "Bạch Đằng" },
+      { sentence: "Lê Lợi là lãnh tụ cuộc khởi nghĩa ___.", correct_word: "Lam Sơn" },
+      { sentence: "Trận chiến nổi tiếng năm 1789 có tên Ngọc Hồi – ___.", correct_word: "Đống Đa" },
+      { sentence: "Cuộc khởi nghĩa Hai Bà Trưng bùng nổ ở Hát ___.", correct_word: "Môn" },
+      { sentence: "Chiến thắng Bạch Đằng năm 1288 diễn ra dưới triều ___.", correct_word: "Trần" },
+      { sentence: "Năm 1427, nghĩa quân Lam Sơn giành thắng lợi lớn tại Chi Lăng – ___.", correct_word: "Xương Giang" },
     ],
   },
   {
-    type: 'fillBlank',
-    title: 'Điền từ: Hàm và mảng',
-    slug: 'seed-fillblank-functions-arrays',
+    type: "fillBlank",
+    title: "Điền niên đại lịch sử Việt Nam",
+    slug: "seed-fillblank-hero-timeline",
     order: 9,
-    description:
-      'Ôn từ khóa hàm, giá trị trả về và các thuộc tính mảng cơ bản.',
+    description: "Ghi nhớ niên đại của các cuộc khởi nghĩa và chiến thắng tiêu biểu.",
     questions: [
-      { sentence: '___ double(x) { return x * 2; }', correct_word: 'function' },
-      { sentence: 'function add(a, b) { ___ a + b; }', correct_word: 'return' },
-      {
-        sentence:
-          'const names = ["An", "Binh"]; names.___ trả về số phần tử là 2.',
-        correct_word: 'length',
-      },
-      {
-        sentence:
-          'const numbers = [1, 2]; numbers.___(3); // thêm 3 vào cuối mảng',
-        correct_word: 'push',
-      },
-      {
-        sentence:
-          'const numbers = [1, 2]; numbers.___(); // xóa và trả về phần tử cuối',
-        correct_word: 'pop',
-      },
-      {
-        sentence:
-          'Một hàm không thực hiện return giá trị sẽ trả về giá trị ___.',
-        correct_word: 'undefined',
-      },
+      { sentence: "Khởi nghĩa Hai Bà Trưng bùng nổ năm ___.", correct_word: "40" },
+      { sentence: "Khởi nghĩa Bà Triệu diễn ra vào năm ___.", correct_word: "248" },
+      { sentence: "Ngô Quyền chiến thắng trên sông Bạch Đằng năm ___.", correct_word: "938" },
+      { sentence: "Chiến thắng Bạch Đằng thời Trần diễn ra năm ___.", correct_word: "1288" },
+      { sentence: "Khởi nghĩa Lam Sơn bắt đầu năm ___.", correct_word: "1418" },
+      { sentence: "Quang Trung đại phá quân Thanh vào mùa xuân năm ___.", correct_word: "1789" },
     ],
   },
-  // No local puzzle assets or static upload serving were found. HTTPS URLs are
-  // explicitly supported by getFullUrl. These three square PNGs were fetched
-  // successfully (HTTP 200, image/png, 288x288) during implementation.
   {
-    type: 'puzzle',
-    title: 'Ghép hình: JavaScript',
-    slug: 'seed-puzzle-javascript-logo',
+    type: "puzzle",
+    title: "Ghép hình: Hai Bà Trưng",
+    slug: "seed-puzzle-hai-ba-trung",
     order: 10,
-    description:
-      'Nhận biết biểu tượng JavaScript, ngôn ngữ thường dùng để lập trình web.',
-    instruction:
-      'Ghép lại biểu tượng JavaScript thành ảnh hoàn chỉnh; dùng nền vàng và chữ JS để định hướng các mảnh.',
-    image:
-      'https://raw.githubusercontent.com/github/explore/c8d7bc516928a4f17845b767884a80cc53affd57/topics/javascript/javascript.png',
+    description: "Ghép hình tượng Hai Bà Trưng và nhận diện hai nữ anh hùng khởi nghĩa năm 40.",
+    instruction: "Ghép lại bức ảnh tượng Hai Bà Trưng tại khu du lịch Suối Tiên; chú ý hai nhân vật cưỡi voi.",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/T%C6%B0%E1%BB%A3ng_Hai_B%C3%A0_Tr%C6%B0ng_%E1%BB%9F_Su%E1%BB%91i_Ti%C3%AAn.JPG",
   },
   {
-    type: 'puzzle',
-    title: 'Ghép hình: Python',
-    slug: 'seed-puzzle-python-logo',
+    type: "puzzle",
+    title: "Ghép hình: Ngô Quyền",
+    slug: "seed-puzzle-ngo-quyen",
     order: 11,
-    description:
-      'Nhận biết biểu tượng Python, một ngôn ngữ phổ biến khi học lập trình.',
-    instruction:
-      'Ghép lại biểu tượng Python hoàn chỉnh, chú ý hai phần màu xanh và vàng đan vào nhau.',
-    image:
-      'https://raw.githubusercontent.com/github/explore/c8d7bc516928a4f17845b767884a80cc53affd57/topics/python/python.png',
+    description: "Ghép hình tượng Ngô Quyền, vị anh hùng gắn với chiến thắng Bạch Đằng năm 938.",
+    instruction: "Ghép lại ảnh tượng Ngô Quyền tại Đường Lâm; quan sát đường nét trang phục và dáng tượng.",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/T%C6%B0%E1%BB%A3ng_Ng%C3%B4_Quy%E1%BB%81n.jpg",
   },
   {
-    type: 'puzzle',
-    title: 'Ghép hình: Node.js',
-    slug: 'seed-puzzle-nodejs-logo',
+    type: "puzzle",
+    title: "Ghép hình: Trần Hưng Đạo",
+    slug: "seed-puzzle-tran-hung-dao",
     order: 12,
-    description:
-      'Nhận biết Node.js, môi trường thực thi JavaScript bên ngoài trình duyệt.',
-    instruction:
-      'Ghép lại biểu tượng Node.js hoàn chỉnh; quan sát đường viền lục giác và chữ ở trung tâm.',
-    image:
-      'https://raw.githubusercontent.com/github/explore/c8d7bc516928a4f17845b767884a80cc53affd57/topics/nodejs/nodejs.png',
+    description: "Ghép hình tượng Trần Hưng Đạo, danh tướng gắn với chiến thắng Bạch Đằng năm 1288.",
+    instruction: "Ghép lại bức ảnh tượng Trần Hưng Đạo ở Nam Định; quan sát dáng đứng và hình khối tượng.",
+    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Tran_Hung_Dao_statue.JPG",
   },
 ];
 

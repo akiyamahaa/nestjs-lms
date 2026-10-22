@@ -20,7 +20,9 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "seed:challenge": "node -r ts-node/register ./seed.ts",
-    "seed:challenge:check": "node -r ts-node/register ./seed.ts --check"
+    "seed:challenge:check": "node -r ts-node/register ./seed.ts --check",
+    "seed:learning": "node -r ts-node/register ./seed-learning.ts",
+    "seed:learning:check": "node -r ts-node/register ./seed-learning.ts --check"
   },
   "dependencies": {
     "@nestjs-modules/mailer": "^2.0.2",
